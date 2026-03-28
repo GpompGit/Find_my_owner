@@ -1,0 +1,13 @@
+{
+  "name": "quartier-bike-id",
+  "version": "1.0.0",
+  "description": "Community bicycle registration and identification system",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "keywords": [],
+  "author": "Guillermo",
+  "license": "ISC"
+}
