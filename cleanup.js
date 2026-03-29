@@ -160,7 +160,33 @@ const sendGarageReminders = async () => {
 }
 
 /**
- * Main function — runs both tasks and exits.
+ * Task 3: Clean Up Expired Magic Link Tokens
+ *
+ * Deletes magic link tokens that are expired or already used.
+ * These are no longer needed and just take up database space.
+ * Expired = older than TOKEN_EXPIRY_MINUTES (default 15 min).
+ * Used = the user already clicked the link.
+ */
+const cleanupExpiredTokens = async () => {
+  try {
+    const [result] = await db.query(`
+      DELETE FROM magic_tokens
+      WHERE used = TRUE
+         OR expires_at < NOW()
+    `)
+
+    if (result.affectedRows > 0) {
+      console.log(`Token cleanup: deleted ${result.affectedRows} expired/used token(s)`)
+    } else {
+      console.log('Token cleanup: no expired tokens found')
+    }
+  } catch (err) {
+    console.error('Token cleanup error:', err.message)
+  }
+}
+
+/**
+ * Main function — runs all tasks and exits.
  *
  * We use an async IIFE (Immediately Invoked Function Expression)
  * to await the async tasks and then exit the process.
@@ -171,8 +197,9 @@ const sendGarageReminders = async () => {
 ;(async () => {
   console.log(`\n=== Cleanup job started at ${new Date().toLocaleString('de-CH')} ===\n`)
 
-  // Run both tasks
+  // Run all tasks
   await cleanupExpiredLocations()
+  await cleanupExpiredTokens()
   await sendGarageReminders()
 
   console.log(`\n=== Cleanup job completed ===\n`)

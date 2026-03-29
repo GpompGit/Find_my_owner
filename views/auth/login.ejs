@@ -1,35 +1,49 @@
 <%- include('../partials/header', { title: t('auth.login_title') }) %>
 
+<!--
+  Login Page — Magic Link (Passwordless)
+
+  Single email field — handles both login AND registration.
+  The user enters their email and receives a magic link.
+  No password fields needed.
+-->
 <main class="container py-5">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
       <div class="card shadow-sm">
         <div class="card-body p-4">
-          <h2 class="card-title text-center mb-4">
-            <i class="bi bi-box-arrow-in-right"></i> <%= t('auth.login_title') %>
+
+          <h2 class="card-title text-center mb-3">
+            <i class="bi bi-envelope-paper"></i> <%= t('auth.login_title') %>
           </h2>
 
+          <!-- Explain how magic links work -->
+          <p class="text-center text-muted mb-4">
+            <%= t('auth.magic_link_explain') %>
+          </p>
+
+          <!--
+            Email-only form — no password.
+            POST /login generates a magic link token and sends it by email.
+          -->
           <form method="POST" action="/login">
+
             <div class="form-floating mb-3">
               <input type="email" class="form-control" id="email" name="email"
                      placeholder="<%= t('auth.email') %>" required autocomplete="email">
               <label for="email"><i class="bi bi-envelope"></i> <%= t('auth.email') %></label>
             </div>
 
-            <div class="form-floating mb-4">
-              <input type="password" class="form-control" id="password" name="password"
-                     placeholder="<%= t('auth.password') %>" required autocomplete="current-password">
-              <label for="password"><i class="bi bi-lock"></i> <%= t('auth.password') %></label>
-            </div>
-
             <button type="submit" class="btn btn-primary w-100 mb-3">
-              <i class="bi bi-box-arrow-in-right"></i> <%= t('auth.login_btn') %>
+              <i class="bi bi-send"></i> <%= t('auth.send_magic_link') %>
             </button>
+
           </form>
 
-          <p class="text-center text-muted mb-0">
-            <%= t('auth.no_account') %> <a href="/register"><%= t('auth.register_here') %></a>
+          <p class="text-center text-muted small mb-0">
+            <%= t('auth.magic_link_info') %>
           </p>
+
         </div>
       </div>
     </div>

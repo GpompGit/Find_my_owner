@@ -1,237 +1,169 @@
 /**
- * routes/auth.js — Authentication Routes
+ * routes/auth.js — Magic Link Authentication (Passwordless)
  *
- * Handles user registration, login, and logout.
+ * No passwords — users authenticate via email magic links.
+ *
+ * Flow:
+ * 1. User enters email at /login → POST /login
+ * 2. Server generates a random token and sends a magic link email
+ * 3. User clicks the link → GET /auth/verify/:token
+ * 4. Server validates the token (exists, not expired, not used)
+ * 5a. If user exists → create session → redirect to /dashboard
+ * 5b. If new user → create session → redirect to /register/complete
+ * 6. At /register/complete, new users enter their name and phone
+ *
+ * Security:
+ * - Tokens generated with crypto.randomBytes(32) — 64 hex chars, unpredictable
+ * - Tokens expire after 15 minutes (configurable via MAGIC_LINK_EXPIRY_MINUTES)
+ * - Tokens are single-use — marked as used after first verification
+ * - Expired/used tokens are cleaned up nightly by cleanup.js
+ * - Session regenerated on login to prevent session fixation
  *
  * Routes:
- *   GET  /register  — show registration form
- *   POST /register  — create new user account
- *   GET  /login     — show login form
- *   POST /login     — authenticate and create session
- *   GET  /logout    — destroy session and redirect
- *
- * Security measures:
- * - Passwords hashed with bcrypt (12 salt rounds)
- * - Passwords compared with bcrypt.compare() (timing-safe)
- * - Login errors use generic messages (don't reveal which field is wrong)
- * - Session regenerated on login to prevent session fixation attacks
+ *   GET  /              — landing page (redirect to dashboard if logged in)
+ *   GET  /login         — show email form
+ *   POST /login         — send magic link email
+ *   GET  /auth/verify/:token — verify token and create session
+ *   GET  /register/complete  — show name/phone form (new users only)
+ *   POST /register/complete  — save name/phone
+ *   GET  /logout        — destroy session
  */
 
 const express = require('express')
-const bcrypt = require('bcrypt')
+const crypto = require('crypto')    // Node built-in: generate secure random tokens
 const db = require('../db/connection')
+const nodemailer = require('nodemailer')
 
-// Create a Router instance — this is a mini-app that handles
-// a group of related routes. We export it and mount it in app.js.
 const router = express.Router()
 
-// ─── Number of bcrypt salt rounds ───────────────────────────────────────────
-// Higher = more secure but slower. 12 is the recommended minimum.
-// Each increment roughly doubles the computation time:
-//   10 rounds ≈ 10 hashes/sec
-//   12 rounds ≈ 2-3 hashes/sec
-//   14 rounds ≈ 0.5 hashes/sec
-const SALT_ROUNDS = 12
+// ─── Email transporter for magic link emails ────────────────────────────────
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT, 10) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+})
+
+// ─── Token expiry time (default 15 minutes) ─────────────────────────────────
+const TOKEN_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES, 10) || 15
 
 // ─── Landing Page ───────────────────────────────────────────────────────────
 
 /**
  * GET / — Landing page
- *
- * If the user is already logged in, redirect to dashboard.
- * Otherwise, show the landing/welcome page.
+ * If already logged in, redirect to dashboard.
  */
 router.get('/', (req, res) => {
-  // If already logged in, go straight to dashboard
   if (req.session.userId) {
     return res.redirect('/dashboard')
   }
-  res.render('landing', { title: 'Welcome' })
+  res.render('landing', { title: req.t('landing.title') })
 })
 
-// ─── Registration ───────────────────────────────────────────────────────────
+// ─── Login (Send Magic Link) ────────────────────────────────────────────────
 
 /**
- * GET /register — Show the registration form
+ * GET /login — Show the email form
  *
- * Renders the register.ejs template with an empty form.
- * If user is already logged in, redirect to dashboard instead.
- */
-router.get('/register', (req, res) => {
-  if (req.session.userId) {
-    return res.redirect('/dashboard')
-  }
-  res.render('auth/register', { title: 'Register' })
-})
-
-/**
- * POST /register — Create a new user account
- *
- * Steps:
- * 1. Extract form fields from req.body
- * 2. Validate required fields
- * 3. Check if email is already registered
- * 4. Hash the password with bcrypt
- * 5. Insert the new user into the database
- * 6. Flash a success message and redirect to login
- *
- * What could go wrong:
- * - Missing required fields → flash error, redirect back
- * - Email already taken → flash error, redirect back
- * - Database error → flash error, redirect back
- */
-router.post('/register', async (req, res) => {
-  try {
-    // Destructure form fields from the request body.
-    // express.urlencoded() middleware already parsed the form data.
-    const { email, password, name, phone } = req.body
-
-    // ── Validate required fields ──
-    // Check that email, password, and name are present and not empty strings.
-    // Phone is optional (used for contact, not required for registration).
-    if (!email || !password || !name) {
-      req.flash('error', req.t('auth.email_name_password_required'))
-      return res.redirect('/register')
-    }
-
-    // ── Validate password length ──
-    // Short passwords are easy to brute-force even with bcrypt.
-    if (password.length < 8) {
-      req.flash('error', req.t('auth.password_too_short'))
-      return res.redirect('/register')
-    }
-
-    // ── Check if email already exists ──
-    // We query for any user with this email. If found, registration fails.
-    // Using parameterized query (?) to prevent SQL injection.
-    const [existing] = await db.query(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
-    )
-
-    if (existing.length > 0) {
-      req.flash('error', req.t('auth.email_exists'))
-      return res.redirect('/register')
-    }
-
-    // ── Hash the password ──
-    // bcrypt.hash() generates a random salt and hashes the password.
-    // The result looks like: $2b$12$LJ3m4ys3Lg...
-    // It includes the salt, so we only need to store this one string.
-    // NEVER store the plain password anywhere.
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-
-    // ── Insert the new user ──
-    // phone can be null if not provided (|| null converts empty string to null)
-    await db.query(
-      'INSERT INTO users (email, password_hash, name, phone) VALUES (?, ?, ?, ?)',
-      [email, passwordHash, name, phone || null]
-    )
-
-    // ── Success — redirect to login ──
-    req.flash('success', req.t('auth.registration_success'))
-    res.redirect('/login')
-  } catch (err) {
-    console.error('Registration error:', err.message)
-    req.flash('error', req.t('auth.registration_failed'))
-    res.redirect('/register')
-  }
-})
-
-// ─── Login ──────────────────────────────────────────────────────────────────
-
-/**
- * GET /login — Show the login form
+ * This single form handles both login AND registration.
+ * The user enters their email — if they have an account, they get logged in.
+ * If they don't, an account is created when they click the link.
  */
 router.get('/login', (req, res) => {
   if (req.session.userId) {
     return res.redirect('/dashboard')
   }
-  res.render('auth/login', { title: 'Login' })
+  res.render('auth/login', { title: req.t('auth.login_title') })
 })
 
 /**
- * POST /login — Authenticate user and create session
+ * POST /login — Generate a magic link token and send it by email
  *
  * Steps:
- * 1. Find user by email
- * 2. Compare submitted password with stored hash
- * 3. If match: store user ID in session, redirect to dashboard
- * 4. If no match: flash generic error, redirect to login
+ * 1. Validate the email format
+ * 2. Generate a cryptographically secure random token
+ * 3. Store the token in the database with an expiry time
+ * 4. Send an email with the magic link
+ * 5. Show a "check your email" confirmation page
  *
- * SECURITY: We use the same error message for "wrong email" and
- * "wrong password" — this prevents attackers from discovering
- * which emails are registered (enumeration attack).
+ * SECURITY: We always show the same success message, whether the email
+ * exists in our system or not. This prevents email enumeration attacks
+ * (an attacker can't discover which emails are registered).
  */
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email } = req.body
 
-    // ── Validate input ──
-    if (!email || !password) {
-      req.flash('error', req.t('auth.email_password_required'))
+    // ── Validate email ──
+    if (!email || !email.includes('@')) {
+      req.flash('error', req.t('auth.email_required'))
       return res.redirect('/login')
     }
 
-    // ── Find user by email ──
-    // We need the password hash to verify, plus the name for the session.
-    const [rows] = await db.query(
-      'SELECT id, email, password_hash, name FROM users WHERE email = ?',
-      [email]
+    // Normalize email to lowercase to prevent duplicate accounts
+    const normalizedEmail = email.trim().toLowerCase()
+
+    // ── Generate a secure random token ──
+    // crypto.randomBytes(32) produces 32 bytes of random data.
+    // .toString('hex') converts to a 64-character hex string.
+    // This is cryptographically unpredictable — impossible to guess.
+    const token = crypto.randomBytes(32).toString('hex')
+
+    // ── Calculate expiry time ──
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000)
+
+    // ── Store the token ──
+    await db.query(
+      'INSERT INTO magic_tokens (email, token, expires_at) VALUES (?, ?, ?)',
+      [normalizedEmail, token, expiresAt]
     )
 
-    // If no user found, use a GENERIC error message.
-    // Don't say "email not found" — that reveals valid emails.
-    if (rows.length === 0) {
-      req.flash('error', req.t('auth.invalid_credentials'))
-      return res.redirect('/login')
-    }
+    // ── Build the magic link URL ──
+    const magicLink = `${process.env.BASE_URL}/auth/verify/${token}`
 
-    const user = rows[0]
-
-    // ── Compare passwords ──
-    // bcrypt.compare() hashes the submitted password with the same salt
-    // that was used originally, then compares the results.
-    // This is timing-safe — it takes the same time whether correct or not,
-    // preventing timing attacks.
-    const passwordMatch = await bcrypt.compare(password, user.password_hash)
-
-    if (!passwordMatch) {
-      // Same generic message as "user not found" — prevents enumeration
-      req.flash('error', req.t('auth.invalid_credentials'))
-      return res.redirect('/login')
-    }
-
-    // ── Regenerate session ──
-    // req.session.regenerate() creates a new session ID.
-    // This prevents "session fixation" attacks where an attacker
-    // sets a known session ID before the user logs in.
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error('Session regeneration error:', err.message)
-        req.flash('error', req.t('auth.login_failed'))
-        return res.redirect('/login')
-      }
-
-      // ── Store user data in the new session ──
-      req.session.userId = user.id
-      req.session.userName = user.name
-
-      // Check if this user is the admin (email matches ADMIN_EMAIL from .env)
-      req.session.isAdmin = (user.email === process.env.ADMIN_EMAIL)
-
-      // ── Save session and redirect ──
-      // req.session.save() ensures the session is written to the store
-      // before the redirect happens. Without this, the redirect could
-      // arrive at the dashboard before the session is saved.
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err.message)
-          req.flash('error', req.t('auth.login_failed'))
-          return res.redirect('/login')
-        }
-        res.redirect('/dashboard')
+    // ── Send the magic link email ──
+    try {
+      await transporter.sendMail({
+        from: `"Quartier Bike ID" <${process.env.SMTP_USER}>`,
+        to: normalizedEmail,
+        subject: 'Your login link — Quartier Bike ID',
+        html: `
+          <h2>Quartier Bike ID — Login Link</h2>
+          <p>Click the button below to log in:</p>
+          <p>
+            <a href="${magicLink}"
+               style="display: inline-block; padding: 12px 24px;
+                      background-color: #0d6efd; color: #ffffff;
+                      text-decoration: none; border-radius: 6px;
+                      font-size: 16px;">
+              Log in to Quartier Bike ID
+            </a>
+          </p>
+          <p style="color: #666; font-size: 14px;">
+            This link expires in ${TOKEN_EXPIRY_MINUTES} minutes and can only be used once.
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            If you didn't request this link, you can safely ignore this email.
+          </p>
+          <hr>
+          <small>Quartier Bike ID — Community bicycle registration</small>
+        `
       })
+    } catch (emailErr) {
+      // If email sending fails, log it but still show the success page.
+      // We don't reveal whether the email was actually sent (security).
+      console.error('Magic link email failed:', emailErr.message)
+    }
+
+    // ── Always show the same success page ──
+    // Whether the email exists or not, whether the email sent or not,
+    // we show "check your email." This prevents enumeration attacks.
+    res.render('auth/check-email', {
+      title: req.t('auth.check_email_title'),
+      email: normalizedEmail
     })
   } catch (err) {
     console.error('Login error:', err.message)
@@ -240,22 +172,175 @@ router.post('/login', async (req, res) => {
   }
 })
 
+// ─── Verify Magic Link ──────────────────────────────────────────────────────
+
+/**
+ * GET /auth/verify/:token — Verify the magic link token
+ *
+ * This is the URL the user clicks in the email.
+ *
+ * Steps:
+ * 1. Look up the token in the database
+ * 2. Check it hasn't expired and hasn't been used
+ * 3. Mark it as used (single-use — can't be clicked again)
+ * 4. Find or create the user by email
+ * 5. Create a session (regenerate for security)
+ * 6. Redirect to dashboard (existing user) or /register/complete (new user)
+ */
+router.get('/auth/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+
+    // ── Validate token format ──
+    // Tokens are 64-character hex strings. Reject anything else early.
+    if (!token || !/^[0-9a-f]{64}$/i.test(token)) {
+      return res.render('auth/link-invalid', { title: req.t('auth.link_invalid_title') })
+    }
+
+    // ── Look up the token ──
+    // Must exist, not be expired, and not already used.
+    const [rows] = await db.query(
+      'SELECT id, email FROM magic_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+      [token]
+    )
+
+    if (rows.length === 0) {
+      // Token is invalid, expired, or already used
+      return res.render('auth/link-expired', { title: req.t('auth.link_expired_title') })
+    }
+
+    const magicToken = rows[0]
+
+    // ── Mark token as used (single-use) ──
+    // This prevents the same link from being clicked again.
+    await db.query('UPDATE magic_tokens SET used = TRUE WHERE id = ?', [magicToken.id])
+
+    // ── Find the user by email ──
+    const [users] = await db.query(
+      'SELECT id, email, name FROM users WHERE email = ?',
+      [magicToken.email]
+    )
+
+    let userId
+    let userName
+    let isNewUser = false
+
+    if (users.length > 0) {
+      // ── Existing user — log them in ──
+      userId = users[0].id
+      userName = users[0].name
+    } else {
+      // ── New user — create account with email only ──
+      // Name and phone will be collected at /register/complete
+      const [result] = await db.query(
+        'INSERT INTO users (email) VALUES (?)',
+        [magicToken.email]
+      )
+      userId = result.insertId
+      userName = null
+      isNewUser = true
+    }
+
+    // ── Regenerate session (security — prevents session fixation) ──
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regeneration error:', err.message)
+        req.flash('error', req.t('auth.login_failed'))
+        return res.redirect('/login')
+      }
+
+      // ── Store user data in session ──
+      req.session.userId = userId
+      req.session.userName = userName
+      req.session.isAdmin = (magicToken.email === process.env.ADMIN_EMAIL)
+
+      // ── Save session and redirect ──
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err.message)
+          req.flash('error', req.t('auth.login_failed'))
+          return res.redirect('/login')
+        }
+
+        if (isNewUser) {
+          // New user — they need to complete their profile (name, phone)
+          return res.redirect('/register/complete')
+        }
+
+        // Existing user — go to dashboard
+        res.redirect('/dashboard')
+      })
+    })
+  } catch (err) {
+    console.error('Token verification error:', err.message)
+    req.flash('error', req.t('auth.login_failed'))
+    res.redirect('/login')
+  }
+})
+
+// ─── Complete Registration (New Users) ──────────────────────────────────────
+
+/**
+ * GET /register/complete — Show the name/phone form for new users
+ *
+ * After clicking the magic link for the first time, the user is logged in
+ * but has no name yet. This page collects their name and optional phone.
+ */
+router.get('/register/complete', (req, res) => {
+  // Must be logged in (magic link was verified)
+  if (!req.session.userId) {
+    return res.redirect('/login')
+  }
+  res.render('auth/register', { title: req.t('auth.register_title') })
+})
+
+/**
+ * POST /register/complete — Save the user's name and phone
+ *
+ * After this, the user's profile is complete and they can use all features.
+ */
+router.post('/register/complete', async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login')
+    }
+
+    const { name, phone } = req.body
+
+    // ── Validate name ──
+    if (!name || name.trim().length === 0) {
+      req.flash('error', req.t('auth.name_required'))
+      return res.redirect('/register/complete')
+    }
+
+    // ── Update the user record with name and phone ──
+    await db.query(
+      'UPDATE users SET name = ?, phone = ? WHERE id = ?',
+      [name.trim(), phone || null, req.session.userId]
+    )
+
+    // ── Update session with the name ──
+    req.session.userName = name.trim()
+
+    req.flash('success', req.t('auth.registration_success'))
+    res.redirect('/dashboard')
+  } catch (err) {
+    console.error('Registration complete error:', err.message)
+    req.flash('error', req.t('auth.registration_failed'))
+    res.redirect('/register/complete')
+  }
+})
+
 // ─── Logout ─────────────────────────────────────────────────────────────────
 
 /**
  * GET /logout — Destroy session and redirect to home
- *
- * req.session.destroy() removes all session data from the server.
- * We also clear the session cookie from the browser with res.clearCookie().
- * After this, the user is completely logged out — no trace remains.
  */
 router.get('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err.message)
     }
-    // Clear the session cookie from the browser.
-    // 'connect.sid' is the default cookie name used by express-session.
     res.clearCookie('connect.sid')
     res.redirect('/')
   })

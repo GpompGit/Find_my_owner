@@ -1,49 +1,52 @@
 <%- include('../partials/header', { title: t('auth.register_title') }) %>
 
+<!--
+  Complete Registration — Name & Phone
+
+  Shown to new users after they click their first magic link.
+  They are already logged in (session exists) but need to provide
+  their name (required) and phone (optional).
+-->
 <main class="container py-5">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
       <div class="card shadow-sm">
         <div class="card-body p-4">
-          <h2 class="card-title text-center mb-4">
+
+          <h2 class="card-title text-center mb-3">
             <i class="bi bi-person-plus"></i> <%= t('auth.register_title') %>
           </h2>
 
-          <form method="POST" action="/register">
+          <p class="text-center text-muted mb-4">
+            <%= t('auth.complete_profile') %>
+          </p>
+
+          <!--
+            Complete registration form — only name and phone.
+            Email was already provided at login. No password needed.
+          -->
+          <form method="POST" action="/register/complete">
+
+            <!-- Full name (required) -->
             <div class="form-floating mb-3">
               <input type="text" class="form-control" id="name" name="name"
                      placeholder="<%= t('auth.name') %>" required autocomplete="name">
               <label for="name"><i class="bi bi-person"></i> <%= t('auth.name') %></label>
             </div>
 
-            <div class="form-floating mb-3">
-              <input type="email" class="form-control" id="email" name="email"
-                     placeholder="<%= t('auth.email') %>" required autocomplete="email">
-              <label for="email"><i class="bi bi-envelope"></i> <%= t('auth.email') %></label>
-            </div>
-
+            <!-- Phone (optional) -->
             <div class="form-floating mb-3">
               <input type="tel" class="form-control" id="phone" name="phone"
                      placeholder="<%= t('auth.phone') %>" autocomplete="tel">
               <label for="phone"><i class="bi bi-telephone"></i> <%= t('auth.phone') %></label>
             </div>
 
-            <div class="form-floating mb-3">
-              <input type="password" class="form-control" id="password" name="password"
-                     placeholder="<%= t('auth.password') %>" minlength="8" required
-                     autocomplete="new-password">
-              <label for="password"><i class="bi bi-lock"></i> <%= t('auth.password') %></label>
-              <div class="form-text"><%= t('auth.password_min') %></div>
-            </div>
-
             <button type="submit" class="btn btn-primary w-100 mb-3">
               <i class="bi bi-check-circle"></i> <%= t('auth.create_account') %>
             </button>
+
           </form>
 
-          <p class="text-center text-muted mb-0">
-            <%= t('auth.already_have_account') %> <a href="/login"><%= t('auth.login_here') %></a>
-          </p>
         </div>
       </div>
     </div>
