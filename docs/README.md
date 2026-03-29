@@ -15,6 +15,7 @@ Step-by-step installation instructions for deploying the application on a Synolo
 | 7 | [07-backup-and-maintenance.md](07-backup-and-maintenance.md) | Scheduled backups, log rotation, and PM2 persistence |
 | 8 | [08-auto-deploy-webhook.md](08-auto-deploy-webhook.md) | GitHub webhook for automatic deployment |
 | 9 | [09-docker-setup.md](09-docker-setup.md) | **Docker setup (recommended)** — one command to start everything |
+| 10 | [10-database-operations.md](10-database-operations.md) | Database queries, DBeaver setup, backup/restore, emergency ops |
 
 ### Deployment Options
 
