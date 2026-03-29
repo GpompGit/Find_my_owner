@@ -539,25 +539,34 @@ const sendPaymentReminder = async (bike) => {
 
 ### Admin print — two labels for garage bikes
 
-**Label 1 — Bike ID QR**
+**Label 1 — Bike ID QR (Dymo 30332, 25 x 25 mm square)**
 
 ```
-┌─────────────────────┐
-│  [QR CODE]          │
-│  Trek · Red         │
-│  🅿️ Garage         │
-└─────────────────────┘
+┌─────────────┐
+│             │
+│  ┌───────┐  │
+│  │  QR   │  │
+│  │ 20x20 │  │
+│  └───────┘  │
+│             │
+└─────────────┘
+    25 x 25mm
 ```
 
-**Label 2 — TWINT Payment QR**
+QR code fills the label — no text. All info shown on the scan page.
+
+**Label 2 — TWINT Payment QR (same 25 x 25 mm square, garage bikes only)**
 
 ```
-┌─────────────────────┐
-│  [TWINT QR CODE]    │
-│  Garage contribution│
-│  CHF 40.00 / year  │
-│  Quartier Bike ID   │
-└─────────────────────┘
+┌─────────────┐
+│             │
+│  ┌───────┐  │
+│  │ TWINT │  │
+│  │  QR   │  │
+│  └───────┘  │
+│             │
+└─────────────┘
+    25 x 25mm
 ```
 
 ### TWINT QR generation
@@ -770,7 +779,7 @@ npm install node-cron
 
 ## Hardware Reference
 
-- **Dymo LabelWriter 450 Twin Turbo** — 54×70mm labels for QR codes or 36×89mm address labels
+- **Dymo LabelWriter 450 Twin Turbo** — uses **30332 square labels (25 x 25 mm)** for QR codes
 - **NFC tags (optional addition)** — NTAG213 anti-metal ferrite tags for metal frames (~€2 each)
 - **QR stickers outdoor** — weatherproof vinyl + laminate
 

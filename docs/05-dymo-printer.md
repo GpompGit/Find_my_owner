@@ -97,12 +97,12 @@ You should see the **DYMO LabelWriter 450 Twin Turbo** listed with both trays.
 
 The LabelWriter 450 Twin Turbo has **two label trays**:
 
-| Tray | Label Size | Used For |
-|------|-----------|----------|
-| Left tray | **25mm x 54mm** (return address) | Bike ID QR code labels |
-| Right tray | **25mm x 54mm** (return address) | TWINT payment QR labels |
+| Tray | Label | Dymo Part # | Used For |
+|------|-------|-------------|----------|
+| Left tray | **25 x 25 mm** (1 x 1 inch square) | **30332** | Bike ID QR code labels |
+| Right tray | **25 x 25 mm** (1 x 1 inch square) | **30332** | TWINT payment QR labels (garage bikes) |
 
-> Adjust tray/label assignments based on your preferred label stock. The 54x70mm labels also work well for QR codes.
+> Both trays use the same 30332 square labels. The small size is ideal for bike frames.
 
 ## Step 5: Browser Certificate Trust
 
@@ -114,41 +114,43 @@ The Dymo Web Service uses a self-signed HTTPS certificate on `127.0.0.1:41951`. 
 
 ## Label Specifications
 
+### Dymo 30332 — 25 x 25 mm Square
+
+Both the bike ID and TWINT payment labels use the same square format. The QR code fills the entire label — no text. All information is shown on the phone screen when the QR is scanned.
+
 ### Bike ID Label
 
 ```
-┌─────────────────────────┐
-│                         │
-│      ┌─────────┐        │
-│      │ QR CODE │        │
-│      └─────────┘        │
-│                         │
-│   Trek · Red            │
-│   🅿️ Garage             │
-│                         │
-└─────────────────────────┘
+┌─────────────┐
+│             │
+│  ┌───────┐  │
+│  │  QR   │  │
+│  │ 20x20 │  │
+│  └───────┘  │
+│             │
+└─────────────┘
+    25 x 25mm
 ```
 
 - QR encodes: `https://bikes.yourdomain.com/bike/<uuid>`
-- QR image: 300x300px minimum for print clarity
-- Text: bike brand + color
-- Garage indicator if applicable
+- QR image: 300x300px (~300 DPI at 25mm)
+- No text on label — clean, minimal design
+- Minimum scan distance: ~15cm with phone camera
 
 ### TWINT Payment Label (garage bikes only)
 
+Same 25x25mm square format with the TWINT payment QR code.
+
 ```
-┌─────────────────────────┐
-│                         │
-│      ┌─────────┐        │
-│      │ TWINT   │        │
-│      │ QR CODE │        │
-│      └─────────┘        │
-│                         │
-│   Garage contribution   │
-│   CHF 40.00 / year     │
-│   Quartier Bike ID      │
-│                         │
-└─────────────────────────┘
+┌─────────────┐
+│             │
+│  ┌───────┐  │
+│  │ TWINT │  │
+│  │  QR   │  │
+│  └───────┘  │
+│             │
+└─────────────┘
+    25 x 25mm
 ```
 
 ## Troubleshooting

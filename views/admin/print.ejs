@@ -3,27 +3,20 @@
 <!--
   Admin — Print-Ready Label Page
 
-  Shows the QR code label (and TWINT QR for garage bikes) in a
-  print-optimised layout.
+  Shows the QR code label preview in the actual 25x25mm square format.
+  Uses Dymo 30332 square labels (25 x 25 mm / 1 x 1 inch).
 
   Two ways to print:
-  1. Browser print: Ctrl+P / Cmd+P — uses @media print CSS from style.css
+  1. Browser print: Ctrl+P / Cmd+P — uses @media print CSS
   2. Dymo SDK: click "Print with Dymo" button (requires Dymo software)
-
-  The 'no-print' class hides elements when printing (defined in style.css).
 -->
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4 no-print">
     <h2><i class="bi bi-printer"></i> <%= t('admin.print_labels') %></h2>
     <div class="d-flex gap-2">
-      <!-- Browser print button -->
       <button onclick="window.print()" class="btn btn-primary">
         <i class="bi bi-printer"></i> <%= t('admin.print_browser') %>
       </button>
-      <!--
-        Dymo print button — calls the dymo-print.js function.
-        Only works if the Dymo Web Service is installed on the admin's computer.
-      -->
       <button onclick="printBikeLabels(<%= bike.id %>)" class="btn btn-outline-primary">
         <i class="bi bi-printer-fill"></i> <%= t('admin.print_dymo') %>
       </button>
@@ -33,45 +26,47 @@
     </div>
   </div>
 
-  <!-- Label preview area -->
+  <!-- Label specification info (hidden when printing) -->
+  <div class="alert alert-info no-print">
+    <i class="bi bi-info-circle"></i>
+    <strong>Dymo 30332</strong> — 25 x 25 mm (1 x 1 inch) square labels.
+    QR code fills the label — no text. All information appears on the scan page.
+  </div>
+
+  <!-- Label previews — shown at actual size (25x25mm) -->
   <div class="row justify-content-center g-4">
 
-    <!-- Label 1 — Bike ID QR Code -->
+    <!-- Label 1 — Bike ID QR Code (25x25mm square) -->
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card text-center">
-        <div class="card-body">
-          <h6 class="card-title"><%= t('admin.bike_label') %></h6>
-          <!-- QR code image — generated during bike registration -->
-          <img src="/uploads/qr/<%= bike.tag_uid %>.png"
-               alt="QR code for <%= bike.brand %> <%= bike.color %>"
-               class="qr-code-display mb-3">
-          <p class="mb-1"><strong><%= bike.brand %> &middot; <%= bike.color %></strong></p>
-          <% if (bike.garage_parking) { %>
-            <p class="text-primary mb-0">
-              <i class="bi bi-p-circle-fill"></i> <%= t('admin.garage') %>
-            </p>
-          <% } %>
-        </div>
+      <p class="text-center text-muted small no-print"><%= t('admin.bike_label') %></p>
+      <!--
+        The .label-preview class renders the QR at the actual label size.
+        25mm = ~94.5px at 96 DPI screen resolution.
+        We use a slightly larger preview (120px) for easier viewing,
+        but the actual print will be 25x25mm.
+      -->
+      <div class="label-preview mx-auto">
+        <img src="/uploads/qr/<%= bike.tag_uid %>.png"
+             alt="QR code for <%= bike.brand %> <%= bike.color %>"
+             class="label-qr-image">
       </div>
+      <p class="text-center text-muted small mt-2 no-print">
+        <%= bike.brand %> &middot; <%= bike.color %>
+      </p>
     </div>
 
-    <!--
-      Label 2 — TWINT Payment QR Code (only for garage bikes)
-      This QR code links to the TWINT payment URL for CHF 40.00
-    -->
+    <!-- Label 2 — TWINT Payment QR (25x25mm square, only for garage bikes) -->
     <% if (bike.garage_parking) { %>
       <div class="col-12 col-md-6 col-lg-4">
-        <div class="card text-center">
-          <div class="card-body">
-            <h6 class="card-title"><%= t('admin.twint_label') %></h6>
-            <img src="/uploads/qr/twint_<%= bike.tag_uid %>.png"
-                 alt="TWINT payment QR code"
-                 class="qr-code-display mb-3">
-            <p class="mb-1"><strong><%= t('admin.garage_contribution') %></strong></p>
-            <p class="mb-1">CHF <%= parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2) %> <%= t('admin.per_year') %></p>
-            <p class="text-muted small mb-0">Quartier Bike ID</p>
-          </div>
+        <p class="text-center text-muted small no-print"><%= t('admin.twint_label') %></p>
+        <div class="label-preview mx-auto">
+          <img src="/uploads/qr/twint_<%= bike.tag_uid %>.png"
+               alt="TWINT payment QR code"
+               class="label-qr-image">
         </div>
+        <p class="text-center text-muted small mt-2 no-print">
+          <%= t('admin.garage_contribution') %> — CHF <%= parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2) %> <%= t('admin.per_year') %>
+        </p>
       </div>
     <% } %>
 
@@ -91,7 +86,6 @@
   </div>
 </main>
 
-<!-- Load the Dymo print script (only needed on this page) -->
 <script src="/js/dymo-print.js"></script>
 
 <%- include('../partials/footer') %>

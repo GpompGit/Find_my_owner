@@ -1,30 +1,33 @@
 /**
  * public/js/dymo-print.js — Dymo LabelWriter SDK Integration (Client-Side)
  *
- * This script runs in the ADMIN'S BROWSER (not on the server).
- * It communicates with the Dymo Web Service running on the admin's computer
- * to print labels directly from the browser.
+ * Prints QR code labels on the Dymo LabelWriter 450 Twin Turbo.
+ * Uses the 30332 square labels (25 x 25 mm) for bike ID QR codes.
+ *
+ * Label layout (25 x 25 mm square):
+ * ┌─────────────┐
+ * │             │
+ * │  ┌───────┐  │
+ * │  │  QR   │  │
+ * │  │ 20x20 │  │
+ * │  └───────┘  │
+ * │             │
+ * └─────────────┘
+ *
+ * The QR code fills most of the label — no text.
+ * All information is shown on the scan page when the QR is scanned.
+ *
+ * For garage bikes, a second label is printed with the TWINT payment QR
+ * on the same 25x25mm square format.
  *
  * Prerequisites:
  * - Dymo Label Software installed on the admin's PC
  * - Dymo Web Service running (background service)
- * - The printer connected and powered on
- *
- * How it works:
- * 1. Admin clicks "Print with Dymo" on the /admin/print/:id page
- * 2. This script fetches bike data from /admin/bike-data/:id (JSON API)
- * 3. It builds a Dymo label XML with the QR code image
- * 4. It sends the label to the Dymo Web Service for printing
- *
- * NOTE: The Dymo JavaScript SDK must be loaded before this script.
- * If Dymo is not available, we fall back to browser printing.
+ * - 30332 square labels loaded in the printer
  */
 
 /**
  * Print bike labels using the Dymo SDK.
- *
- * This function is called when the admin clicks the "Print with Dymo" button.
- * It's attached to the button via onclick="printBikeLabels(bikeId)".
  *
  * @param {number} bikeId - The bike's database ID
  */
@@ -41,8 +44,6 @@ async function printBikeLabels(bikeId) {
     var bike = await response.json()
 
     // ── Step 2: Check if Dymo SDK is available ──
-    // The Dymo SDK loads as a global 'dymo' object.
-    // If it's not available, the Dymo software isn't installed.
     if (typeof dymo === 'undefined' || !dymo.label || !dymo.label.framework) {
       alert(
         'Dymo Label Software is not detected.\n\n' +
@@ -65,16 +66,14 @@ async function printBikeLabels(bikeId) {
       return
     }
 
-    // ── Step 4: Build and print the bike ID label ──
-    var bikeLabelXml = buildBikeLabelXml(
-      bike.qr_url, bike.brand, bike.color, bike.garage_parking
-    )
+    // ── Step 4: Build and print the bike ID label (25x25mm square) ──
+    var bikeLabelXml = buildSquareQrLabel(bike.qr_url)
     var bikeLabel = dymo.label.framework.openLabelXml(bikeLabelXml)
     bikeLabel.print(printer.name)
 
-    // ── Step 5: Print TWINT label if garage parking ──
+    // ── Step 5: Print TWINT label if garage parking (same 25x25mm) ──
     if (bike.garage_parking && bike.twint_qr_url) {
-      var twintLabelXml = buildTwintLabelXml(bike.twint_qr_url)
+      var twintLabelXml = buildSquareQrLabel(bike.twint_qr_url)
       var twintLabel = dymo.label.framework.openLabelXml(twintLabelXml)
       twintLabel.print(printer.name)
     }
@@ -87,58 +86,47 @@ async function printBikeLabels(bikeId) {
 }
 
 /**
- * Build the Dymo label XML for a bike ID QR code.
+ * Build Dymo label XML for a 25x25mm square QR code label.
  *
- * Dymo SDK uses XML to define label layouts.
- * This creates a simple label with a QR code image and text.
+ * The label contains only the QR code image, centred and filling
+ * as much of the 25x25mm area as possible (~20mm QR with ~2.5mm margins).
  *
- * @param {string} qrUrl - URL path to the QR code PNG
- * @param {string} brand - Bike brand
- * @param {string} color - Bike color
- * @param {boolean} garageParking - Whether the bike has garage parking
+ * Dymo SDK uses XML to define label layouts. The label dimensions
+ * are specified in twips (1 inch = 1440 twips):
+ * - 25mm = ~0.984 inches = ~1417 twips
+ *
+ * @param {string} qrImageUrl - URL path to the QR code PNG image
  * @returns {string} Dymo label XML
  */
-function buildBikeLabelXml(qrUrl, brand, color, garageParking) {
-  // This is a simplified Dymo label template.
-  // In production, you would create the label in Dymo Label Software,
-  // export it as XML, and use it as a template here.
-  return '<?xml version="1.0" encoding="utf-8"?>' +
-    '<DieCutLabel Version="8.0">' +
-    '<PaperOrientation>Landscape</PaperOrientation>' +
-    '<ObjectInfo>' +
-      '<ImageObject>' +
-        '<Name>QRCode</Name>' +
-        '<Data>' + qrUrl + '</Data>' +
-      '</ImageObject>' +
-      '<TextObject>' +
-        '<Name>BikeInfo</Name>' +
-        '<Text>' + brand + ' · ' + color +
-        (garageParking ? ' · Garage' : '') +
-        '</Text>' +
-      '</TextObject>' +
-    '</ObjectInfo>' +
-    '</DieCutLabel>'
-}
+function buildSquareQrLabel(qrImageUrl) {
+  // 25mm ≈ 1417 twips (1 inch = 1440 twips, 25mm = 0.984 inches)
+  var labelSize = '1417'
+  // QR area: ~20mm = 1134 twips, centered with ~2.5mm margins
+  var qrSize = '1134'
+  var margin = '142'  // (1417 - 1134) / 2 ≈ 142 twips = ~2.5mm
 
-/**
- * Build the Dymo label XML for a TWINT payment QR code.
- *
- * @param {string} twintQrUrl - URL path to the TWINT QR code PNG
- * @returns {string} Dymo label XML
- */
-function buildTwintLabelXml(twintQrUrl) {
   return '<?xml version="1.0" encoding="utf-8"?>' +
-    '<DieCutLabel Version="8.0">' +
-    '<PaperOrientation>Landscape</PaperOrientation>' +
-    '<ObjectInfo>' +
-      '<ImageObject>' +
-        '<Name>TwintQR</Name>' +
-        '<Data>' + twintQrUrl + '</Data>' +
-      '</ImageObject>' +
-      '<TextObject>' +
-        '<Name>PaymentInfo</Name>' +
-        '<Text>Garage contribution · CHF 40.00/year · Quartier Bike ID</Text>' +
-      '</TextObject>' +
-    '</ObjectInfo>' +
+    '<DieCutLabel Version="8.0" Units="twips">' +
+      '<PaperOrientation>Landscape</PaperOrientation>' +
+      '<Id>Small30332</Id>' +
+      '<PaperName>30332 1 in x 1 in</PaperName>' +
+      '<DrawCommands>' +
+        // Draw the QR code image, centred in the label
+        '<RoundRectangle X="0" Y="0" Width="' + labelSize + '" Height="' + labelSize + '" Rx="0" Ry="0" />' +
+        '<ImageObject>' +
+          '<Name>QRCode</Name>' +
+          '<ForeColor Alpha="255" Red="0" Green="0" Blue="0" />' +
+          '<BackColor Alpha="0" Red="255" Green="255" Blue="255" />' +
+          '<LinkedObjectName></LinkedObjectName>' +
+          '<Rotation>Rotation0</Rotation>' +
+          '<IsMirrored>False</IsMirrored>' +
+          '<IsVariable>False</IsVariable>' +
+          '<ImageLocation>' + qrImageUrl + '</ImageLocation>' +
+          '<ScaleMode>Uniform</ScaleMode>' +
+          '<BorderWidth>0</BorderWidth>' +
+          '<HorizontalAlignment>Center</HorizontalAlignment>' +
+          '<VerticalAlignment>Center</VerticalAlignment>' +
+        '</ImageObject>' +
+      '</DrawCommands>' +
     '</DieCutLabel>'
 }

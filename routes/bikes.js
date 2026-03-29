@@ -160,9 +160,10 @@ router.post('/add', requireAuth, upload.single('photo'), async (req, res) => {
 
     // ── Generate QR code PNG ──
     // QRCode.toFile() creates a PNG image file at the specified path.
-    // width: 400 gives a clear, print-ready image.
+    // width: 300 gives ~300 DPI on a 25mm Dymo 30332 square label —
+    // optimal for reliable scanning from phone cameras.
     const qrPath = path.join(__dirname, '..', 'uploads', 'qr', `${tagUid}.png`)
-    await QRCode.toFile(qrPath, bikeUrl, { width: 400 })
+    await QRCode.toFile(qrPath, bikeUrl, { width: 300, margin: 1 })
 
     // ── Get the photo filename (if uploaded) ──
     // req.file is set by multer if a file was uploaded.
