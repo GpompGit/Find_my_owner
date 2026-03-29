@@ -65,10 +65,32 @@
               </td>
               <td>
                 <!-- Action buttons — small size for table use -->
-                <div class="btn-group btn-group-sm">
-                  <a href="/bikes/edit/<%= bike.id %>" class="btn btn-outline-primary">
+                <div class="d-flex gap-1">
+                  <a href="/bikes/edit/<%= bike.id %>" class="btn btn-sm btn-outline-primary"
+                     title="Edit">
                     <i class="bi bi-pencil"></i>
                   </a>
+                  <% if (bike.status === 'active') { %>
+                    <!--
+                      Report stolen button — POST form disguised as a button.
+                      confirm() shows a dialog before submitting.
+                    -->
+                    <form method="POST" action="/bikes/stolen/<%= bike.id %>" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-outline-danger"
+                              title="Report stolen"
+                              onclick="return confirm('Mark this bike as stolen?')">
+                        <i class="bi bi-exclamation-triangle"></i>
+                      </button>
+                    </form>
+                  <% } else if (bike.status === 'stolen') { %>
+                    <!-- Mark recovered button -->
+                    <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
+                      <button type="submit" class="btn btn-sm btn-outline-success"
+                              title="Mark recovered">
+                        <i class="bi bi-check-circle"></i>
+                      </button>
+                    </form>
+                  <% } %>
                 </div>
               </td>
             </tr>

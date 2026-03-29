@@ -1,1 +1,72 @@
-<!-- All registered bikes -->
+<%- include('../partials/header', { title: 'All Bikes' }) %>
+
+<!--
+  Admin — All Bikes List
+
+  Shows every bike in the system with owner info.
+  Admin can click through to print labels.
+  Uses table-responsive for mobile scrolling.
+-->
+<main class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-list-ul"></i> All Bikes <span class="badge bg-secondary"><%= bikes.length %></span></h2>
+    <a href="/admin" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Owner</th>
+          <th>Brand</th>
+          <th>Color</th>
+          <th>Status</th>
+          <th class="d-none d-md-table-cell">Garage</th>
+          <th class="d-none d-lg-table-cell">Registered</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% bikes.forEach(bike => { %>
+          <tr class="<%= bike.status === 'stolen' ? 'table-danger' : '' %>">
+            <td>
+              <%= bike.owner_name %>
+              <br>
+              <small class="text-muted"><%= bike.owner_email %></small>
+            </td>
+            <td><%= bike.brand %></td>
+            <td><%= bike.color %></td>
+            <td>
+              <% if (bike.status === 'active') { %>
+                <span class="badge bg-success">Active</span>
+              <% } else if (bike.status === 'stolen') { %>
+                <span class="badge bg-danger">Stolen</span>
+              <% } else { %>
+                <span class="badge bg-secondary">Inactive</span>
+              <% } %>
+            </td>
+            <td class="d-none d-md-table-cell">
+              <% if (bike.garage_parking) { %>
+                <i class="bi bi-p-circle-fill text-primary"></i>
+              <% } %>
+            </td>
+            <td class="d-none d-lg-table-cell">
+              <%= new Date(bike.registered).toLocaleDateString('de-CH') %>
+            </td>
+            <td>
+              <!-- Print label button -->
+              <a href="/admin/print/<%= bike.id %>" class="btn btn-sm btn-outline-secondary"
+                 title="Print labels">
+                <i class="bi bi-printer"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

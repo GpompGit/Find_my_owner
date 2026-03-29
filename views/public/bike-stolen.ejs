@@ -1,1 +1,140 @@
-<!-- Stolen bike scan page (requests GPS) -->
+<%- include('../partials/header', { title: 'Stolen Bicycle' }) %>
+
+<!--
+  Public Scan Page — Stolen Bike
+
+  This page is shown when someone scans a QR code on a bike that has been
+  reported stolen by its owner. It:
+  1. Warns the finder that the bike is stolen
+  2. Asks for GPS permission (with clear explanation and consent)
+  3. Still shows a contact form to message the owner
+
+  GPS location is NEVER auto-requested. The finder must actively click
+  "Share my location" — this is a GDPR requirement.
+
+  The location.js script (loaded at the bottom) handles the GPS API call
+  and sends coordinates to /api/log-location.
+-->
+<main class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+
+      <!-- Stolen bike warning card -->
+      <div class="card shadow-sm border-danger">
+
+        <!-- Bike photo (if available) -->
+        <% if (bike.photo_url) { %>
+          <img src="/uploads/photos/<%= bike.photo_url %>"
+               alt="Photo of <%= bike.brand %> <%= bike.color %>"
+               class="card-img-top bike-photo">
+        <% } %>
+
+        <div class="card-body">
+
+          <!-- Bike identification -->
+          <h4 class="card-title">
+            <i class="bi bi-bicycle"></i>
+            <%= bike.brand %> &middot; <%= bike.color %>
+          </h4>
+
+          <!--
+            Stolen alert — the key UI element on this page.
+            Uses Bootstrap's alert-danger for strong visual impact.
+            The stolen-alert class (from style.css) adds a left border.
+          -->
+          <div class="alert alert-danger stolen-alert text-center">
+            <h4 class="alert-heading">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              This bicycle has been reported stolen
+            </h4>
+            <p>
+              We would like to share your current location
+              with the owner to help recover this bike.
+            </p>
+            <p class="text-muted small">
+              Your location will only be used for this purpose
+              and automatically deleted after 90 days.
+            </p>
+
+            <!--
+              GPS consent buttons.
+              The "Share my location" button triggers the GPS request
+              via the location.js script. The user must actively click it.
+              "Continue without" skips GPS — the contact form is still available.
+            -->
+            <div class="d-flex justify-content-center gap-2 mt-3">
+              <button class="btn btn-primary" id="share-location">
+                <i class="bi bi-geo-alt"></i> Share my location
+              </button>
+              <button class="btn btn-outline-secondary" id="skip-location">
+                Continue without
+              </button>
+            </div>
+
+            <!--
+              Status message — updated by location.js after the GPS request.
+              Shows "Location shared" or "Location not shared" feedback.
+            -->
+            <p id="location-status" class="mt-2 mb-0"></p>
+          </div>
+
+          <!-- Owner info — first name only -->
+          <p class="text-muted">
+            <i class="bi bi-person"></i>
+            Belongs to <strong><%= bike.owner_first_name %></strong>
+          </p>
+
+          <!-- Contact form — same as active bike page -->
+          <h5><i class="bi bi-envelope"></i> Contact the Owner</h5>
+          <p class="text-muted small">
+            If you know where this bike is, please let the owner know.
+          </p>
+
+          <form method="POST" action="/contact/<%= bike.id %>">
+            <div class="mb-3">
+              <label for="finder_name" class="form-label">Your name (optional)</label>
+              <input type="text" class="form-control" id="finder_name"
+                     name="finder_name" maxlength="100">
+            </div>
+
+            <div class="mb-3">
+              <label for="finder_phone" class="form-label">Your phone (optional)</label>
+              <input type="tel" class="form-control" id="finder_phone"
+                     name="finder_phone" maxlength="30">
+            </div>
+
+            <div class="mb-3">
+              <label for="message" class="form-label">Message</label>
+              <textarea class="form-control" id="message" name="message"
+                        rows="3" required
+                        placeholder="e.g. I saw this bike locked outside the post office..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-send"></i> Send Message
+            </button>
+          </form>
+        </div>
+
+        <!-- Privacy notice -->
+        <div class="card-footer text-muted small text-center">
+          <i class="bi bi-shield-lock"></i>
+          Location data auto-deletes after 90 days. No data shared with third parties.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!--
+  Store the bike's tag_uid in a data attribute so location.js can read it.
+  This is how we pass server-side data to client-side JavaScript safely.
+  Using a data attribute avoids inline scripts with dynamic values.
+-->
+<div id="bike-data" data-uid="<%= bike.tag_uid %>" class="d-none"></div>
+
+<!-- Load the GPS location script — handles the Share/Skip buttons -->
+<script src="/js/location.js"></script>
+
+<%- include('../partials/footer') %>

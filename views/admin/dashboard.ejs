@@ -1,1 +1,117 @@
-<!-- Admin dashboard -->
+<%- include('../partials/header', { title: 'Admin Dashboard' }) %>
+
+<!--
+  Admin Dashboard — System Overview
+
+  Shows key statistics as Bootstrap cards in a responsive grid.
+  Each stat card links to the detailed admin page for that section.
+
+  The 'stats' object is passed from the route handler with counts
+  for users, bikes, stolen, garage, scans, and messages.
+-->
+<main class="container py-4">
+  <h2 class="mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+
+  <!--
+    Stats grid — uses Bootstrap's responsive grid system.
+    col-6: 2 cards per row on small screens
+    col-md-4: 3 cards per row on medium screens
+    col-lg-2: 6 cards per row on large screens
+  -->
+  <div class="row g-3 mb-4">
+
+    <!-- Users count -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="bi bi-people display-6 text-primary"></i>
+          <h3 class="mt-2"><%= stats.users %></h3>
+          <p class="text-muted mb-0">Users</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total bikes -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <a href="/admin/bikes" class="text-decoration-none">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="bi bi-bicycle display-6 text-success"></i>
+            <h3 class="mt-2"><%= stats.bikes %></h3>
+            <p class="text-muted mb-0">Bikes</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Stolen bikes -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="card text-center h-100 <%= stats.stolen > 0 ? 'border-danger' : '' %>">
+        <div class="card-body">
+          <i class="bi bi-exclamation-triangle display-6 text-danger"></i>
+          <h3 class="mt-2"><%= stats.stolen %></h3>
+          <p class="text-muted mb-0">Stolen</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Garage users -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <a href="/admin/garage" class="text-decoration-none">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="bi bi-p-circle display-6 text-info"></i>
+            <h3 class="mt-2"><%= stats.garage %></h3>
+            <p class="text-muted mb-0">Garage</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Total scans -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <a href="/admin/scans" class="text-decoration-none">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="bi bi-qr-code-scan display-6 text-warning"></i>
+            <h3 class="mt-2"><%= stats.scans %></h3>
+            <p class="text-muted mb-0">Scans</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Contact messages -->
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="bi bi-envelope display-6 text-secondary"></i>
+          <h3 class="mt-2"><%= stats.messages %></h3>
+          <p class="text-muted mb-0">Messages</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Quick links to admin sections -->
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <a href="/admin/bikes" class="btn btn-outline-primary w-100 py-3">
+        <i class="bi bi-list-ul"></i> All Bikes
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a href="/admin/garage" class="btn btn-outline-info w-100 py-3">
+        <i class="bi bi-p-circle"></i> Garage Management
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a href="/admin/scans" class="btn btn-outline-warning w-100 py-3">
+        <i class="bi bi-qr-code-scan"></i> Scan History
+      </a>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
