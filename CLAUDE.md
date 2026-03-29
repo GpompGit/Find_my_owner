@@ -48,6 +48,7 @@ The application runs on **DS713+** (lab NAS). DS713+ supports Docker and Node.js
 |Photo handling |`multer`                         |Multipart form uploads                  |
 |Email          |`nodemailer`                     |Admin + user notifications              |
 |Templates      |EJS                              |Simple server-side HTML rendering       |
+|CSS framework  |Bootstrap 5 (CDN)                |Responsive UI, no build step required   |
 |Label printing |Dymo JavaScript SDK              |Direct browser-to-printer               |
 |Tunnel         |Cloudflare Tunnel (`cloudflared`)|Public HTTPS, hides home IP             |
 |Process manager|PM2                              |Keep Node.js running after NAS reboot   |
@@ -106,6 +107,63 @@ quartier-bike-id/
     ├── schema.sql
     └── connection.js
 ```
+
+-----
+
+## Frontend — Bootstrap 5 (CDN)
+
+The UI uses **Bootstrap 5** loaded via CDN — no build step, no npm dependency. All pages are server-rendered EJS templates styled with Bootstrap components.
+
+### CDN includes (in `partials/header.ejs`)
+
+```html
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/3kTbyBp3ELkDPsoS/BdQQ4iOe8YSxV"
+      crossorigin="anonymous">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet">
+```
+
+```html
+<!-- Bootstrap 5 JS (in partials/footer.ejs, before </body>) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+```
+
+### Bootstrap component mapping
+
+| Page | Bootstrap Components |
+|------|---------------------|
+| Login / Register | `card`, `form-control`, `form-label`, `btn btn-primary`, `alert` for flash messages |
+| Dashboard | `table table-striped`, `badge` for bike status, `btn-group` for actions, `card` for summary |
+| Add / Edit bike | `form-control`, `form-select`, `form-check` for garage checkbox, `card` with `card-body` |
+| Public scan page | `card` centered with `mx-auto`, bike photo in `card-img-top`, `list-group` for details |
+| Stolen bike page | `alert alert-danger`, `btn btn-primary` / `btn-outline-secondary` for GPS consent |
+| Contact form | `form-floating` inputs, `btn btn-primary`, `alert alert-success` on sent |
+| Admin dashboard | `row` / `col` grid, `card` stats, `table table-hover` for lists |
+| Admin garage | `table table-striped`, `badge bg-success/warning/danger` for payment status |
+| Admin print | Minimal styling — print-optimized layout, Bootstrap grid for label preview |
+
+### Custom CSS (`public/css/style.css`)
+
+Use `style.css` for project-specific overrides only — do not duplicate what Bootstrap provides:
+
+- Brand colors and logo
+- QR code display sizing
+- Print-specific styles (`@media print`)
+- Stolen bike alert custom styling
+
+### Responsive Design
+
+- All pages must work on mobile (QR scans happen on phones)
+- Use Bootstrap's responsive grid (`col-12 col-md-6 col-lg-4`)
+- Navigation uses `navbar` with `navbar-toggler` for mobile collapse
+- Tables use `table-responsive` wrapper for horizontal scrolling on small screens
+- Forms use `col-12 col-md-8 col-lg-6 mx-auto` for centered, readable width
 
 -----
 
@@ -292,16 +350,23 @@ navigator.geolocation.getCurrentPosition(
 
 ### Message shown to finder
 
-```
-⚠️ This bicycle has been reported stolen
-
-We would like to share your current location
-with the owner to help recover this bike.
-
-Your location will only be used for this purpose
-and automatically deleted after 90 days.
-
-[ Share my location ]   [ Continue without ]
+```html
+<div class="alert alert-danger text-center">
+  <h4 class="alert-heading">This bicycle has been reported stolen</h4>
+  <p>
+    We would like to share your current location
+    with the owner to help recover this bike.
+  </p>
+  <p class="text-muted small">
+    Your location will only be used for this purpose
+    and automatically deleted after 90 days.
+  </p>
+  <div class="d-flex justify-content-center gap-2 mt-3">
+    <button class="btn btn-primary" id="share-location">Share my location</button>
+    <button class="btn btn-outline-secondary" id="skip-location">Continue without</button>
+  </div>
+  <p id="location-status" class="mt-2 mb-0"></p>
+</div>
 ```
 
 ### GDPR auto-delete — runs nightly via PM2 cron
@@ -415,13 +480,36 @@ const sendPaymentReminder = async (bike) => {
 
 ### Admin garage panel
 
-```
-Garage Users (12 bikes)              CHF 480 / year expected
-
-Name          Bike           Registered    Due          Status
-Jan Mueller   Trek 520       01.01.2026    01.01.2027   Paid ✓
-Anna Meier    Giant Escape   15.03.2026    15.03.2027   Pending    [Mark paid]
-Peter Koch    Scott Scale    20.03.2026    03.04.2026   OVERDUE    [Mark paid]
+```html
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Garage Users <span class="badge bg-secondary">12 bikes</span></h2>
+    <span class="text-muted">CHF 480 / year expected</span>
+  </div>
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Name</th><th>Bike</th><th>Registered</th><th>Due</th><th>Status</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Jan Mueller</td><td>Trek 520</td><td>01.01.2026</td><td>01.01.2027</td>
+        <td><span class="badge bg-success">Paid</span></td><td></td>
+      </tr>
+      <tr>
+        <td>Anna Meier</td><td>Giant Escape</td><td>15.03.2026</td><td>15.03.2027</td>
+        <td><span class="badge bg-warning text-dark">Pending</span></td>
+        <td><button class="btn btn-sm btn-outline-success">Mark paid</button></td>
+      </tr>
+      <tr class="table-danger">
+        <td>Peter Koch</td><td>Scott Scale</td><td>20.03.2026</td><td>03.04.2026</td>
+        <td><span class="badge bg-danger">OVERDUE</span></td>
+        <td><button class="btn btn-sm btn-outline-success">Mark paid</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 ```
 
 -----
@@ -431,14 +519,16 @@ Peter Koch    Scott Scale    20.03.2026    03.04.2026   OVERDUE    [Mark paid]
 ### On bike registration form
 
 ```html
-<fieldset>
-  <legend>Garage Parking</legend>
-  <label>
-    <input type="checkbox" name="garage_parking" value="1">
-    This bicycle parks in the building garage
-  </label>
-  <div id="garage-info" style="display:none">
-    <p>
+<fieldset class="card card-body mb-3">
+  <legend class="card-title h6">Garage Parking</legend>
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="garage_parking" value="1" id="garageParkingCheck">
+    <label class="form-check-label" for="garageParkingCheck">
+      This bicycle parks in the building garage
+    </label>
+  </div>
+  <div id="garage-info" class="alert alert-info mt-2 d-none">
+    <p class="mb-0">
       Annual garage contribution: <strong>CHF 40.00 per bicycle</strong>.
       Payment is voluntary via TWINT.
       You will receive a TWINT payment QR code with your bike sticker.
