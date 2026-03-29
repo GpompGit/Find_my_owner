@@ -14,6 +14,7 @@
               <i class="bi bi-geo-alt"></i> <%= t('map.view_map') %>
             </a>
             <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit" class="btn btn-sm btn-outline-success">
                 <i class="bi bi-check-circle"></i> <%= t('bikes.mark_recovered') %>
               </button>
@@ -24,6 +25,7 @@
         <div class="alert alert-success d-flex justify-content-between align-items-center">
           <span><i class="bi bi-check-circle-fill"></i> <%= t('bikes.status_active_banner') %></span>
           <form method="POST" action="/bikes/stolen/<%= bike.id %>" class="d-inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="btn btn-sm btn-outline-danger"
                     onclick="return confirm('<%= t('bikes.confirm_stolen') %>')">
               <i class="bi bi-exclamation-triangle"></i> <%= t('bikes.report_stolen') %>
@@ -33,6 +35,7 @@
       <% } %>
 
       <form method="POST" action="/bikes/edit/<%= bike.id %>" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="card card-body mb-3">
           <h6 class="card-title"><i class="bi bi-bicycle"></i> <%= t('bikes.details') %></h6>
           <div class="mb-3">
@@ -100,6 +103,7 @@
       <hr>
       <form method="POST" action="/bikes/delete/<%= bike.id %>"
             onsubmit="return confirm('<%= t('bikes.delete_confirm') %>')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button type="submit" class="btn btn-outline-danger">
           <i class="bi bi-trash"></i> <%= t('bikes.delete_btn') %>
         </button>

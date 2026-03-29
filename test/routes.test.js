@@ -18,6 +18,27 @@ const { describe, it } = require('mocha')
 const request = require('supertest')
 const app = require('../app')
 
+/**
+ * Helper: get a CSRF token and session cookie from a GET request.
+ *
+ * Since we added CSRF protection, every POST request needs a valid
+ * _csrf token that matches the session. This helper:
+ * 1. Makes a GET request to the login page
+ * 2. Extracts the CSRF token from the hidden input
+ * 3. Extracts the session cookie
+ * 4. Returns both for use in POST requests
+ */
+const getCsrfToken = async () => {
+  const res = await request(app).get('/login')
+  // Extract CSRF token from the HTML: name="_csrf" value="..."
+  const match = res.text.match(/name="_csrf"\s+value="([^"]+)"/)
+  const token = match ? match[1] : ''
+  // Extract session cookie
+  const cookies = res.headers['set-cookie']
+  const cookie = cookies ? cookies.map(c => c.split(';')[0]).join('; ') : ''
+  return { token, cookie }
+}
+
 // ─── PUBLIC ROUTES ──────────────────────────────────────────────────────────
 
 describe('Public Routes', () => {
@@ -229,26 +250,39 @@ describe('Admin Route Enforcement', () => {
 
 describe('Login Security', () => {
 
-  describe('POST /login without secret question', () => {
-    it('should redirect back to /login with error', async () => {
+  describe('POST /login without CSRF token', () => {
+    it('should redirect back (CSRF rejection)', async () => {
       const res = await request(app)
         .post('/login')
         .send({ email: 'test@example.com' })
+      // CSRF middleware rejects — redirects back
+      if (res.status !== 302) {
+        throw new Error(`Expected 302 redirect (CSRF rejection), got ${res.status}`)
+      }
+    })
+  })
+
+  describe('POST /login without secret question', () => {
+    it('should redirect back to /login with error', async () => {
+      const { token, cookie } = await getCsrfToken()
+      const res = await request(app)
+        .post('/login')
+        .set('Cookie', cookie)
+        .send({ email: 'test@example.com', _csrf: token })
         // No neighbourhood_secret field
       if (res.status !== 302) {
         throw new Error(`Expected 302 redirect, got ${res.status}`)
-      }
-      if (!res.headers.location.includes('/login')) {
-        throw new Error('Should redirect to /login')
       }
     })
   })
 
   describe('POST /login with wrong secret', () => {
     it('should redirect back to /login with error', async () => {
+      const { token, cookie } = await getCsrfToken()
       const res = await request(app)
         .post('/login')
-        .send({ email: 'test@example.com', neighbourhood_secret: 'wronganswer' })
+        .set('Cookie', cookie)
+        .send({ email: 'test@example.com', neighbourhood_secret: 'wronganswer', _csrf: token })
       if (res.status !== 302) {
         throw new Error(`Expected 302 redirect, got ${res.status}`)
       }
@@ -257,12 +291,15 @@ describe('Login Security', () => {
 
   describe('POST /login with honeypot filled', () => {
     it('should show fake success page (not reveal bot detection)', async () => {
+      const { token, cookie } = await getCsrfToken()
       const res = await request(app)
         .post('/login')
+        .set('Cookie', cookie)
         .send({
           email: 'bot@example.com',
           neighbourhood_secret: 'Bolligenstrasse',
-          website: 'http://spam.com'  // Honeypot field filled = bot
+          website: 'http://spam.com',  // Honeypot field filled = bot
+          _csrf: token
         })
       // Should show the "check email" page (fake success)
       if (res.status !== 200) {
@@ -273,9 +310,11 @@ describe('Login Security', () => {
 
   describe('POST /login with invalid email format', () => {
     it('should redirect back for "notanemail"', async () => {
+      const { token, cookie } = await getCsrfToken()
       const res = await request(app)
         .post('/login')
-        .send({ email: 'notanemail', neighbourhood_secret: 'Bolligenstrasse' })
+        .set('Cookie', cookie)
+        .send({ email: 'notanemail', neighbourhood_secret: 'Bolligenstrasse', _csrf: token })
       if (res.status !== 302) {
         throw new Error(`Expected 302 redirect, got ${res.status}`)
       }

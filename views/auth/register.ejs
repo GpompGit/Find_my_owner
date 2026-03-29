@@ -26,6 +26,7 @@
             Email was already provided at login. No password needed.
           -->
           <form method="POST" action="/register/complete">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
             <!-- Full name (required) -->
             <div class="form-floating mb-3">

@@ -240,6 +240,7 @@
     "server_error": "Une erreur inattendue s'est produite. Veuillez reessayer plus tard.",
     "access_denied": "Acces refuse",
     "admin_required": "Acces administrateur requis",
-    "load_failed": "Impossible de charger les donnees. Veuillez reessayer."
+    "load_failed": "Impossible de charger les donnees. Veuillez reessayer.",
+    "csrf_failed": "Soumission de formulaire invalide. Veuillez reessayer."
   }
 }

@@ -27,6 +27,8 @@ const session = require('express-session')  // Session middleware — remembers 
 const flash = require('connect-flash')      // Flash messages — one-time notifications
 const cookieParser = require('cookie-parser')  // Parse cookies (needed for language preference)
 const helmet = require('helmet')              // Security headers (X-Frame-Options, CSP, etc.)
+const MySQLStore = require('express-mysql-session')(session)  // Store sessions in MariaDB
+const crypto = require('crypto')              // Node built-in: generate CSRF tokens
 const i18n = require('./middleware/i18n')       // Multi-language support (DE/EN/FR)
 
 // ─── 3. Import route files ──────────────────────────────────────────────────
@@ -144,17 +146,45 @@ app.use(cookieParser())
  * 3. Express looks up the session by that ID and restores req.session
  * 4. We store userId in the session at login, and check it in requireAuth
  *
- * Configuration:
- * - secret:            Used to sign the session cookie (prevents tampering)
- * - resave:            Don't save session if nothing changed (performance)
- * - saveUninitialized: Don't create session until something is stored (privacy)
- * - cookie.secure:     Only send cookie over HTTPS (Cloudflare Tunnel provides this)
- * - cookie.httpOnly:   JavaScript cannot read the cookie (prevents XSS theft)
- * - cookie.sameSite:   Cookie only sent for same-site requests (CSRF protection)
- * - cookie.maxAge:     Session lasts 7 days (in milliseconds)
+ * Session store:
+ * - In production, sessions are stored in MariaDB (express-mysql-session).
+ *   This means sessions survive server restarts and don't leak memory.
+ * - In development/test (no DB), we fall back to MemoryStore (default).
+ *   MemoryStore is fine for dev but leaks memory over time in production.
+ *
+ * The session store creates its own 'sessions' table automatically
+ * on first connection — no manual schema setup needed.
  */
+
+// Create session store — use MariaDB in production, memory in dev/test
+let sessionStore
+if (process.env.DB_HOST && process.env.NODE_ENV !== 'test') {
+  // MariaDB-backed session store — persistent, no memory leaks
+  sessionStore = new MySQLStore({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT, 10) || 3307,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    // How often to clean up expired sessions (every 15 minutes)
+    checkExpirationInterval: 15 * 60 * 1000,
+    // How long sessions live in the database (7 days in seconds)
+    expiration: 7 * 24 * 60 * 60 * 1000,
+    // Name of the sessions table (auto-created if it doesn't exist)
+    schema: {
+      tableName: 'sessions',
+      columnNames: {
+        session_id: 'session_id',
+        expires: 'expires',
+        data: 'data'
+      }
+    }
+  })
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
+  store: sessionStore || undefined,  // MariaDB store or default MemoryStore
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -197,6 +227,56 @@ app.use(flash())
  * Also available in route handlers as req.t() and req.lang.
  */
 app.use(i18n)
+
+/**
+ * CSRF (Cross-Site Request Forgery) Protection
+ *
+ * CSRF attacks trick a logged-in user into submitting a form on a
+ * malicious website that targets our app. The browser sends the
+ * session cookie automatically, so our server thinks it's legitimate.
+ *
+ * How we prevent this:
+ * 1. On every page load, we generate a random CSRF token and store
+ *    it in the session.
+ * 2. Every form includes a hidden input with this token:
+ *    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+ * 3. On form submission (POST), we verify the token matches the session.
+ * 4. A malicious site can't read our token (same-origin policy),
+ *    so their forged form submissions are rejected.
+ *
+ * Excluded endpoints:
+ * - POST /api/log-location — JSON API called by JavaScript, not a form
+ * - POST /deploy/webhook — GitHub webhook with its own HMAC signature
+ */
+app.use((req, res, next) => {
+  // Skip CSRF for JSON API endpoints and the deploy webhook
+  // These have their own authentication mechanisms
+  if (req.path.startsWith('/api/') || req.path.startsWith('/deploy/')) {
+    return next()
+  }
+
+  // For POST requests, verify the CSRF token
+  if (req.method === 'POST') {
+    const sessionToken = req.session && req.session.csrfToken
+    const formToken = req.body && req.body._csrf
+
+    if (!sessionToken || !formToken || sessionToken !== formToken) {
+      req.flash('error', req.t ? req.t('errors.csrf_failed') : 'Invalid form submission. Please try again.')
+      // Redirect back to where they came from, or to home
+      return res.redirect('back')
+    }
+  }
+
+  // Generate a new CSRF token if one doesn't exist in the session
+  if (req.session && !req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex')
+  }
+
+  // Make the token available to all templates
+  res.locals.csrfToken = req.session ? req.session.csrfToken : ''
+
+  next()
+})
 
 /**
  * Make flash messages and session data available to ALL templates.

@@ -240,6 +240,7 @@
     "server_error": "An unexpected error occurred. Please try again later.",
     "access_denied": "Access denied",
     "admin_required": "Admin access required",
-    "load_failed": "Could not load data. Please try again."
+    "load_failed": "Could not load data. Please try again.",
+    "csrf_failed": "Invalid form submission. Please try again."
   }
 }

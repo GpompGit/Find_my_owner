@@ -240,6 +240,7 @@
     "server_error": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
     "access_denied": "Zugriff verweigert",
     "admin_required": "Admin-Zugriff erforderlich",
-    "load_failed": "Daten konnten nicht geladen werden. Bitte versuchen Sie es erneut."
+    "load_failed": "Daten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "csrf_failed": "Ungültige Formularübermittlung. Bitte versuchen Sie es erneut."
   }
 }
