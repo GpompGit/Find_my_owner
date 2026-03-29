@@ -2,7 +2,7 @@
 
 ## Overview
 
-A community bicycle registration and identification system running entirely on a self-hosted Synology NAS. Neighbours register an account with email and password, then register as many bicycles as they want under their account. Each bicycle gets a unique QR code label printed on a Dymo LabelWriter. Anyone who finds the bicycle scans the QR with any smartphone camera — no app required — and sees the owner info plus a contact form. The system also manages a voluntary garage parking contribution of CHF 40/year per bike, collected via TWINT QR code.
+A community bicycle registration and identification system for the **Baumgarten** neighbourhood, running entirely on a self-hosted Synology NAS. Neighbours register an account with email (passwordless magic link), then register as many bicycles as they want under their account. Each bicycle gets a unique QR code label printed on a Dymo LabelWriter. Anyone who finds the bicycle scans the QR with any smartphone camera — no app required — and sees the owner info plus a contact form. The system also manages a voluntary garage parking contribution of CHF 40/year per bike, collected via TWINT QR code.
 
 -----
 
@@ -18,6 +18,7 @@ A community bicycle registration and identification system running entirely on a
 - Manage garage parking registration: CHF 40/year per bike, paid via TWINT QR code
 - Print a TWINT payment QR label alongside the bike ID label for garage users
 - Notify admin (Guillermo) by email on new registrations, contact form submissions, and stolen bike scans with location
+- Stolen bike maps: owner sees their bike's exact scan locations, community sees a theft hotspot map (approximate areas), admin sees all scan locations
 
 -----
 
@@ -341,6 +342,12 @@ app.use(session({
 |`GET /admin/garage`        |Admin       |Garage users + payment status        |
 |`POST /admin/payment/:id`  |Admin       |Mark payment received                |
 |`GET /admin/scans`         |Admin       |Full scan history                    |
+|`GET /map`                 |Public      |Community theft hotspot map          |
+|`GET /map/bike/:id`        |Auth + owner|Owner's stolen bike scan locations   |
+|`GET /admin/map`           |Admin       |All scan locations (detailed)        |
+|`GET /api/map/community`   |Public      |JSON — approximate scan coordinates  |
+|`GET /api/map/bike/:id`    |Auth + owner|JSON — exact scan coordinates        |
+|`GET /api/map/admin`       |Admin       |JSON — all scan coordinates          |
 
 -----
 
@@ -828,7 +835,7 @@ npm install node-cron
 ## Future Extensions
 
 - Multi-language: German + French for Swiss neighbourhood
-- Stolen bike map — admin view of all scan locations
+- ~~Stolen bike map~~ — implemented: owner map, community hotspot map, admin map
 - Annual payment reminder emails (auto-sent each January)
 - NFC tag support alongside QR — same URL, dual technology sticker
 - Extend to other objects: scooters, strollers, shared tools
@@ -836,5 +843,5 @@ npm install node-cron
 
 -----
 
-*Project owner: Guillermo · Lab NAS: DS713+ (192.168.1.252) · Printer: Dymo (192.168.1.121)*
+*Project owner: Guillermo · Neighbourhood: Baumgarten · Lab NAS: DS713+ (192.168.1.252) · Printer: Dymo (192.168.1.121)*
 *Home network infrastructure context lives in a separate Claude project.*

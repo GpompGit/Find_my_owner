@@ -1,0 +1,86 @@
+<%- include('../partials/header', { title: t('map.admin_title') }) %>
+
+<!--
+  Admin Map — All Scan Locations
+
+  Shows every scan with GPS data across all bikes.
+  Includes bike details, owner name, and accuracy.
+  Only accessible by the admin.
+-->
+<main class="container-fluid py-0">
+  <div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2><i class="bi bi-map"></i> <%= t('map.admin_title') %></h2>
+      <a href="/admin" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
+      </a>
+    </div>
+  </div>
+
+  <!-- Map container -->
+  <div id="map" style="height: 600px; width: 100%;"></div>
+
+  <div class="container py-3">
+    <small class="text-muted">
+      <i class="bi bi-info-circle"></i> <%= t('map.admin_notice') %>
+    </small>
+  </div>
+</main>
+
+<!-- Leaflet.js -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+  var map = L.map('map').setView([47.38, 8.54], 14)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+  }).addTo(map)
+
+  /**
+   * Fetch all scan data (admin has full access).
+   * Markers are colour-coded: red for stolen, blue for active.
+   */
+  fetch('/api/map/admin')
+    .then(function (response) { return response.json() })
+    .then(function (scans) {
+      scans.forEach(function (scan) {
+        var color = scan.status === 'stolen' ? '#dc3545' : '#0d6efd'
+
+        L.circleMarker([scan.lat, scan.lng], {
+          radius: 7,
+          fillColor: color,
+          color: '#fff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        })
+          .addTo(map)
+          .bindPopup(
+            '<strong>' + scan.brand + ' ' + scan.color + '</strong><br>' +
+            '<%= t("admin.owner") %>: ' + scan.owner_name + '<br>' +
+            '<%= t("map.scanned_at") %>: ' + scan.scan_date + '<br>' +
+            (scan.accuracy ? '<%= t("map.accuracy") %>: ~' + Math.round(scan.accuracy) + 'm<br>' : '') +
+            (scan.expires_date ? '<small class="text-muted"><%= t("map.data_expires") %>: ' + scan.expires_date + '</small>' : '') +
+            '<br><span class="badge ' + (scan.status === 'stolen' ? 'bg-danger' : 'bg-primary') + '">' + scan.status + '</span>'
+          )
+      })
+
+      // Fit map to show all markers
+      if (scans.length > 0) {
+        var bounds = scans.map(function (s) { return [s.lat, s.lng] })
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 })
+      }
+    })
+    .catch(function (err) {
+      console.error('Failed to load map data:', err)
+    })
+</script>
+
+<%- include('../partials/footer') %>

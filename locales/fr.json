@@ -5,6 +5,7 @@
     "dashboard": "Mes velos",
     "add_bike": "Ajouter un velo",
     "admin": "Admin",
+    "map": "Carte",
     "login": "Connexion",
     "register": "S'inscrire",
     "logout": "Deconnexion"
@@ -179,6 +180,23 @@
     "device": "Appareil",
     "no_scans": "Aucun scan enregistre.",
     "showing_recent": "Affichage des 200 scans les plus recents."
+  },
+  "map": {
+    "community_title": "Carte des vols Baumgarten",
+    "community_subtitle": "Localisations approximatives ou des velos voles ont ete scannes dans le quartier.",
+    "owner_title": "Localisations des scans",
+    "owner_subtitle": "Localisations exactes ou votre velo vole a ete scanne.",
+    "admin_title": "Carte des scans",
+    "view_map": "Voir la carte",
+    "approximate_notice": "Les localisations sont approximatives (~200m) pour proteger la vie privee.",
+    "register_bike": "Enregistrer votre velo",
+    "no_scans_yet": "Aucune localisation de scan enregistree.",
+    "latest_scan": "Dernier scan",
+    "scanned_at": "Scanne",
+    "accuracy": "Precision",
+    "data_expires": "Donnees expirent",
+    "owner_privacy_notice": "Seul vous pouvez voir ces localisations exactes. Les donnees sont supprimees apres 90 jours.",
+    "admin_notice": "Affiche toutes les localisations de scan avec GPS. Rouge = vole, bleu = actif."
   },
   "legal": {
     "privacy": "Politique de confidentialite",

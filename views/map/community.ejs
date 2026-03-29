@@ -1,0 +1,112 @@
+<%- include('../partials/header', { title: t('map.community_title') }) %>
+
+<!--
+  Community Theft Hotspot Map
+
+  Public page — no login required.
+  Shows approximate locations (~200m) where stolen bikes have been scanned.
+  Uses Leaflet.js (open-source) with OpenStreetMap tiles (no API key).
+
+  The map centres on Baumgarten neighbourhood by default.
+  Markers show bike brand/colour and scan date — no personal info.
+-->
+<main class="container-fluid py-0">
+  <!-- Map header with title -->
+  <div class="container py-3">
+    <h2>
+      <i class="bi bi-geo-alt"></i> <%= t('map.community_title') %>
+    </h2>
+    <p class="text-muted mb-0"><%= t('map.community_subtitle') %></p>
+  </div>
+
+  <!--
+    Map container — full width, fixed height.
+    Leaflet requires a container with explicit height to render.
+    The id="map" is referenced by the JavaScript below.
+  -->
+  <div id="map" style="height: 500px; width: 100%;"></div>
+
+  <!-- Map legend and privacy note -->
+  <div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <small class="text-muted">
+        <i class="bi bi-info-circle"></i> <%= t('map.approximate_notice') %>
+      </small>
+      <a href="/login" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-bicycle"></i> <%= t('map.register_bike') %>
+      </a>
+    </div>
+  </div>
+</main>
+
+<!--
+  Leaflet.js CSS and JS — loaded from CDN (no npm install needed).
+  Leaflet is an open-source map library that works with OpenStreetMap.
+  Unlike Google Maps, it requires no API key or billing account.
+-->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+  /**
+   * Initialize the community map.
+   *
+   * L.map('map') creates a Leaflet map inside the #map div.
+   * setView([lat, lng], zoom) centres the map on Baumgarten.
+   * Zoom level 14 shows a neighbourhood-level view.
+   */
+  var map = L.map('map').setView([47.38, 8.54], 14)
+
+  /**
+   * Add OpenStreetMap tile layer.
+   * These are the actual map images (streets, buildings, etc.).
+   * Free to use with attribution.
+   */
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+  }).addTo(map)
+
+  /**
+   * Fetch scan data from our API and add markers.
+   * The API returns approximate coordinates (rounded to ~200m).
+   */
+  fetch('/api/map/community')
+    .then(function (response) { return response.json() })
+    .then(function (scans) {
+      scans.forEach(function (scan) {
+        // Create a red circle marker for each scan location.
+        // circleMarker is better than a regular marker for hotspot visualisation —
+        // overlapping circles show denser areas more clearly.
+        L.circleMarker([scan.lat, scan.lng], {
+          radius: 8,
+          fillColor: '#dc3545',    // Bootstrap danger red
+          color: '#dc3545',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: 0.4
+        })
+          .addTo(map)
+          // Popup shown when the marker is clicked
+          .bindPopup(
+            '<strong>' + scan.brand + ' ' + scan.color + '</strong><br>' +
+            '<small class="text-muted">' + scan.scan_date + '</small>'
+          )
+      })
+
+      // If there are scans, fit the map to show all markers
+      if (scans.length > 0) {
+        var bounds = scans.map(function (s) { return [s.lat, s.lng] })
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 })
+      }
+    })
+    .catch(function (err) {
+      console.error('Failed to load map data:', err)
+    })
+</script>
+
+<%- include('../partials/footer') %>

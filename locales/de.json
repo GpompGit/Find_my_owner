@@ -5,6 +5,7 @@
     "dashboard": "Meine Velos",
     "add_bike": "Velo hinzufügen",
     "admin": "Admin",
+    "map": "Karte",
     "login": "Anmelden",
     "register": "Registrieren",
     "logout": "Abmelden"
@@ -179,6 +180,23 @@
     "device": "Gerät",
     "no_scans": "Noch keine Scans aufgezeichnet.",
     "showing_recent": "Zeigt die 200 neuesten Scans."
+  },
+  "map": {
+    "community_title": "Baumgarten Diebstahlkarte",
+    "community_subtitle": "Ungefähre Standorte, an denen gestohlene Velos in der Nachbarschaft gescannt wurden.",
+    "owner_title": "Scan-Standorte",
+    "owner_subtitle": "Genaue Standorte, an denen Ihr gestohlenes Velo gescannt wurde.",
+    "admin_title": "Scan-Karte",
+    "view_map": "Karte anzeigen",
+    "approximate_notice": "Standorte sind ungefähr (~200m) zum Schutz der Privatsphäre.",
+    "register_bike": "Velo registrieren",
+    "no_scans_yet": "Noch keine Scan-Standorte aufgezeichnet.",
+    "latest_scan": "Neuester Scan",
+    "scanned_at": "Gescannt",
+    "accuracy": "Genauigkeit",
+    "data_expires": "Daten verfallen",
+    "owner_privacy_notice": "Nur Sie können diese genauen Standorte sehen. Daten werden nach 90 Tagen automatisch gelöscht.",
+    "admin_notice": "Zeigt alle Scan-Standorte mit GPS-Daten. Rot = gestohlen, blau = aktiv."
   },
   "legal": {
     "privacy": "Datenschutz",
