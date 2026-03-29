@@ -24,8 +24,27 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- Makes the page responsive on mobile devices (critical for QR scan pages) -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--
+    Makes the page responsive on mobile devices (critical for QR scan pages).
+    viewport-fit=cover enables content to fill the area behind the iPhone notch.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!--
+    iOS Safari / iPhone specific meta tags:
+    - theme-color: colours the status bar to match the navbar
+    - apple-mobile-web-app-capable: enables "Add to Home Screen" as a standalone app
+    - apple-mobile-web-app-status-bar-style: dark status bar to match dark navbar
+    - apple-touch-icon: the icon shown on the iPhone home screen
+  -->
+  <meta name="theme-color" content="#212529">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bike ID">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.svg">
+
+  <!-- PWA manifest — enables "Add to Home Screen" on Android too -->
+  <link rel="manifest" href="/manifest.json">
 
   <!-- Page title — uses the 'title' variable passed from each page, with a fallback -->
   <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Quartier Bike ID</title>
