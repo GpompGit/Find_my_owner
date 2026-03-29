@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
-    "test": "mocha --timeout 10000 --exit test/**/*.test.js"
+    "test": "mocha --timeout 10000 --exit test/routes.test.js",
+    "test:db": "mocha --timeout 15000 --exit test/routes.test.js test/database.test.js"
   },
   "keywords": [],
   "author": "Guillermo",
