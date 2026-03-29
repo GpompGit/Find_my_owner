@@ -56,11 +56,51 @@
               <%= new Date(bike.registered).toLocaleDateString('de-CH') %>
             </td>
             <td>
-              <!-- Print label button -->
-              <a href="/admin/print/<%= bike.id %>" class="btn btn-sm btn-outline-secondary"
-                 title="<%= t('admin.print_labels') %>">
-                <i class="bi bi-printer"></i>
-              </a>
+              <div class="d-flex gap-1">
+                <!-- Print label -->
+                <a href="/admin/print/<%= bike.id %>" class="btn btn-sm btn-outline-secondary"
+                   title="<%= t('admin.print_labels') %>">
+                  <i class="bi bi-printer"></i>
+                </a>
+                <!-- Status change dropdown -->
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                          title="<%= t('admin.change_status') %>">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="status" value="active">
+                        <button type="submit" class="dropdown-item"><%= t('dashboard.status_active') %></button>
+                      </form>
+                    </li>
+                    <li>
+                      <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="status" value="stolen">
+                        <button type="submit" class="dropdown-item text-danger"><%= t('dashboard.status_stolen') %></button>
+                      </form>
+                    </li>
+                    <li>
+                      <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="status" value="inactive">
+                        <button type="submit" class="dropdown-item"><%= t('dashboard.status_inactive') %></button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+                <!-- Delete -->
+                <form method="POST" action="/admin/bikes/<%= bike.id %>/delete"
+                      onsubmit="return confirm('<%= t('admin.confirm_delete_bike') %>')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="<%= t('admin.delete_bike') %>">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
         <% }) %>

@@ -1,0 +1,61 @@
+<%- include('../partials/header', { title: t('admin.all_messages') }) %>
+
+<main class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-envelope"></i> <%= t('admin.all_messages') %> <span class="badge bg-secondary"><%= messages.length %></span></h2>
+    <a href="/admin" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
+    </a>
+  </div>
+
+  <% if (messages.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th><%= t('admin.date') %></th>
+            <th><%= t('admin.bike') %></th>
+            <th><%= t('admin.owner') %></th>
+            <th><%= t('admin.from') %></th>
+            <th><%= t('public.message') %></th>
+            <th><%= t('admin.action') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% messages.forEach(msg => { %>
+            <tr>
+              <td><%= new Date(msg.sent_at).toLocaleString('de-CH') %></td>
+              <td><%= msg.brand %> <%= msg.color %></td>
+              <td><%= msg.owner_name %></td>
+              <td>
+                <%= msg.finder_name || '-' %>
+                <% if (msg.finder_phone) { %>
+                  <br><small class="text-muted"><%= msg.finder_phone %></small>
+                <% } %>
+              </td>
+              <td>
+                <!-- Show first 150 chars, full text in a tooltip -->
+                <span title="<%= msg.message %>">
+                  <%= msg.message.substring(0, 150) %><%= msg.message.length > 150 ? '...' : '' %>
+                </span>
+              </td>
+              <td>
+                <form method="POST" action="/admin/messages/<%= msg.id %>/delete"
+                      onsubmit="return confirm('<%= t('admin.confirm_delete_message') %>')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="<%= t('admin.delete_message') %>">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="text-center text-muted py-4"><%= t('admin.no_messages') %></p>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>
