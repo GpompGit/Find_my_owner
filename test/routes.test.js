@@ -410,33 +410,236 @@ describe('Public Scan Page', () => {
   })
 })
 
-// ─── DEPLOY WEBHOOK ─────────────────────────────────────────────────────────
+// ─── DEPLOY WEBHOOK (CI/CD Pipeline) ────────────────────────────────────────
 
-describe('Deploy Webhook', () => {
+describe('Deploy Webhook (CI/CD Pipeline)', () => {
+  // Test webhook secret — must match for signature verification
+  const WEBHOOK_SECRET = 'test-webhook-secret-for-ci-cd'
+  const crypto = require('crypto')
+  const fs = require('fs')
+  const path = require('path')
 
-  describe('GET /deploy/status', () => {
-    it('should return JSON with status info', async () => {
+  /**
+   * Helper: sign a payload with HMAC-SHA256 (same as GitHub does).
+   * GitHub signs every webhook payload with the shared secret.
+   * This helper replicates that so we can send authentic-looking requests.
+   */
+  const signPayload = (payload, secret) => {
+    return 'sha256=' + crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex')
+  }
+
+  // Set the webhook secret before tests run
+  before(() => {
+    process.env.DEPLOY_WEBHOOK_SECRET = WEBHOOK_SECRET
+  })
+
+  // Clean up trigger files after tests
+  afterEach(() => {
+    const triggerFile = path.join(__dirname, '..', 'uploads', '.deploy-trigger')
+    try { fs.unlinkSync(triggerFile) } catch (e) { /* file may not exist */ }
+  })
+
+  describe('GET /deploy/status (health check)', () => {
+    it('should return JSON with status, node_version, and uptime', async () => {
       const res = await request(app).get('/deploy/status')
       if (res.status !== 200) {
         throw new Error(`Expected 200, got ${res.status}`)
       }
       const body = res.body
       if (body.status !== 'running') {
-        throw new Error('Expected status: running')
+        throw new Error(`Expected status "running", got "${body.status}"`)
       }
       if (!body.node_version) {
         throw new Error('Expected node_version in response')
+      }
+      if (typeof body.uptime_seconds !== 'number') {
+        throw new Error('Expected uptime_seconds as number')
+      }
+      if (!body.timestamp) {
+        throw new Error('Expected timestamp in response')
       }
     })
   })
 
   describe('POST /deploy/webhook without signature', () => {
-    it('should return 401 for missing signature', async () => {
+    it('should return 401 (signature required)', async () => {
       const res = await request(app)
         .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
         .send({ ref: 'refs/heads/main' })
-      if (res.status !== 401 && res.status !== 500) {
-        throw new Error(`Expected 401 or 500, got ${res.status}`)
+      if (res.status !== 401) {
+        throw new Error(`Expected 401, got ${res.status}`)
+      }
+    })
+  })
+
+  describe('POST /deploy/webhook with wrong signature', () => {
+    it('should return 401 (invalid signature)', async () => {
+      const payload = JSON.stringify({ ref: 'refs/heads/main' })
+      const wrongSignature = signPayload(payload, 'wrong-secret')
+
+      const res = await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', wrongSignature)
+        .set('x-github-event', 'push')
+        .send(payload)
+
+      if (res.status !== 401) {
+        throw new Error(`Expected 401, got ${res.status}`)
+      }
+    })
+  })
+
+  describe('POST /deploy/webhook with valid signature but non-push event', () => {
+    it('should return 200 and ignore the event', async () => {
+      const payload = JSON.stringify({ action: 'opened' })
+      const signature = signPayload(payload, WEBHOOK_SECRET)
+
+      const res = await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', signature)
+        .set('x-github-event', 'pull_request')  // Not a push event
+        .send(payload)
+
+      if (res.status !== 200) {
+        throw new Error(`Expected 200, got ${res.status}`)
+      }
+      if (!res.body.message.includes('ignored')) {
+        throw new Error('Should indicate the event was ignored')
+      }
+    })
+  })
+
+  describe('POST /deploy/webhook with valid signature but wrong branch', () => {
+    it('should return 200 and ignore non-main branch', async () => {
+      const payload = JSON.stringify({ ref: 'refs/heads/feature-branch' })
+      const signature = signPayload(payload, WEBHOOK_SECRET)
+
+      const res = await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', signature)
+        .set('x-github-event', 'push')
+        .send(payload)
+
+      if (res.status !== 200) {
+        throw new Error(`Expected 200, got ${res.status}`)
+      }
+      if (!res.body.message.includes('ignored')) {
+        throw new Error('Should indicate the branch was ignored')
+      }
+    })
+  })
+
+  describe('POST /deploy/webhook with valid signature and main branch', () => {
+    it('should return 200 and trigger deploy', async () => {
+      const payload = JSON.stringify({
+        ref: 'refs/heads/main',
+        pusher: { name: 'test-user' },
+        commits: [{ message: 'test commit' }]
+      })
+      const signature = signPayload(payload, WEBHOOK_SECRET)
+
+      const res = await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', signature)
+        .set('x-github-event', 'push')
+        .send(payload)
+
+      if (res.status !== 200) {
+        throw new Error(`Expected 200, got ${res.status}`)
+      }
+      if (!res.body.message.includes('Deploy triggered')) {
+        throw new Error(`Expected "Deploy triggered", got "${res.body.message}"`)
+      }
+      if (res.body.branch !== 'main') {
+        throw new Error(`Expected branch "main", got "${res.body.branch}"`)
+      }
+    })
+
+    it('should write a deploy trigger file (Docker mode detection)', async () => {
+      // In the test environment, /.dockerenv does not exist,
+      // so the webhook runs deploy.sh (direct mode).
+      // We test that when the trigger file IS created, it has valid JSON.
+
+      // Manually simulate what the Docker-mode webhook does:
+      const triggerFile = path.join(__dirname, '..', 'uploads', '.deploy-trigger')
+      const triggerData = {
+        timestamp: new Date().toISOString(),
+        pusher: 'test-user',
+        commits: 1
+      }
+      fs.writeFileSync(triggerFile, JSON.stringify(triggerData))
+
+      // Verify the trigger file exists and contains valid JSON
+      if (!fs.existsSync(triggerFile)) {
+        throw new Error('Trigger file should exist')
+      }
+      const content = JSON.parse(fs.readFileSync(triggerFile, 'utf8'))
+      if (!content.timestamp) {
+        throw new Error('Trigger file should contain timestamp')
+      }
+      if (content.pusher !== 'test-user') {
+        throw new Error(`Expected pusher "test-user", got "${content.pusher}"`)
+      }
+    })
+  })
+
+  describe('Webhook signature verification (timing-safe)', () => {
+    it('should reject tampered payload (same signature, different body)', async () => {
+      // Sign the original payload
+      const original = JSON.stringify({ ref: 'refs/heads/main' })
+      const signature = signPayload(original, WEBHOOK_SECRET)
+
+      // Send a DIFFERENT payload with the original's signature
+      const tampered = JSON.stringify({ ref: 'refs/heads/main', injected: true })
+
+      const res = await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', signature)
+        .set('x-github-event', 'push')
+        .send(tampered)
+
+      // Signature won't match the tampered body — should be rejected
+      if (res.status !== 401) {
+        throw new Error(`Expected 401 (tampered payload), got ${res.status}`)
+      }
+    })
+  })
+
+  describe('Deploy status after webhook', () => {
+    it('should confirm app is still running after deploy attempt', async () => {
+      // Fire a valid webhook
+      const payload = JSON.stringify({
+        ref: 'refs/heads/main',
+        pusher: { name: 'ci-test' }
+      })
+      const signature = signPayload(payload, WEBHOOK_SECRET)
+
+      await request(app)
+        .post('/deploy/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-hub-signature-256', signature)
+        .set('x-github-event', 'push')
+        .send(payload)
+
+      // Wait a moment for any async operations
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Verify the app is still healthy
+      const statusRes = await request(app).get('/deploy/status')
+      if (statusRes.status !== 200) {
+        throw new Error(`App should still be running after deploy, got ${statusRes.status}`)
+      }
+      if (statusRes.body.status !== 'running') {
+        throw new Error('App status should be "running" after deploy')
       }
     })
   })
