@@ -278,9 +278,15 @@ app.use((err, req, res, next) => {
 //
 // app.listen() starts the HTTP server on the specified port.
 // The callback runs once the server is ready to accept connections.
+// We export the app for testing (supertest can use it without listen()).
+// The server only starts if this file is run directly (not imported by tests).
 const PORT = process.env.PORT || 8080
 
-app.listen(PORT, () => {
-  console.log(`Quartier Bike ID running on http://localhost:${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
-})
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Quartier Bike ID running on http://localhost:${PORT}`)
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+  })
+}
+
+module.exports = app
