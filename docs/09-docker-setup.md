@@ -66,13 +66,23 @@ Fill in your values:
 PORT=8080
 BASE_URL=https://bikes.yourdomain.com
 
-# Database — these are used by docker-compose to create the DB on first start
+# Database — you choose BOTH passwords here. Docker creates everything automatically.
+# No Synology MariaDB package needed — Docker runs its own database.
+#
+# Two passwords explained:
+#   DB_ROOT_PASSWORD = the database administrator (full access: create/drop tables, manage users)
+#                      Only needed for emergencies and schema changes.
+#   DB_PASS          = the app user "bikeapp" (limited: can only read/write data in quartier_bikes)
+#                      This is what the application uses day-to-day.
+#
+# Think of it like: root = building owner with master key, bikeapp = tenant with apartment key.
+# Choose different passwords for each. No popup will ask — Docker reads them from here.
 DB_HOST=db
 DB_PORT=3306
 DB_USER=bikeapp
 DB_PASS=choose_a_strong_password
 DB_NAME=quartier_bikes
-DB_ROOT_PASSWORD=choose_a_strong_root_password
+DB_ROOT_PASSWORD=choose_a_different_strong_root_password
 
 # Session
 SESSION_SECRET=generate_with_node_e_crypto_randomBytes_32_hex
