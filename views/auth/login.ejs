@@ -1,11 +1,12 @@
 <%- include('../partials/header', { title: t('auth.login_title') }) %>
 
 <!--
-  Login Page — Magic Link (Passwordless)
+  Login Page — Magic Link (Passwordless) with Security Layers
 
-  Single email field — handles both login AND registration.
-  The user enters their email and receives a magic link.
-  No password fields needed.
+  Three security measures:
+  1. Neighbourhood secret question — only Baumgarten residents know the answer
+  2. Honeypot field — hidden input that bots fill in, humans never see
+  3. Rate limiting — handled server-side (max 5 requests/hour/email)
 -->
 <main class="container py-5">
   <div class="row justify-content-center">
@@ -17,21 +18,50 @@
             <i class="bi bi-envelope-paper"></i> <%= t('auth.login_title') %>
           </h2>
 
-          <!-- Explain how magic links work -->
           <p class="text-center text-muted mb-4">
             <%= t('auth.magic_link_explain') %>
           </p>
 
-          <!--
-            Email-only form — no password.
-            POST /login generates a magic link token and sends it by email.
-          -->
           <form method="POST" action="/login">
 
+            <!-- Email -->
             <div class="form-floating mb-3">
               <input type="email" class="form-control" id="email" name="email"
                      placeholder="<%= t('auth.email') %>" required autocomplete="email">
               <label for="email"><i class="bi bi-envelope"></i> <%= t('auth.email') %></label>
+            </div>
+
+            <!--
+              Neighbourhood secret question.
+              Only Baumgarten residents know the answer.
+              The question is shown as a label; the answer is validated server-side.
+              The expected answer is in .env (NEIGHBOURHOOD_SECRET), so it can be
+              changed at any time without code changes.
+            -->
+            <div class="mb-3">
+              <label for="neighbourhood_secret" class="form-label">
+                <i class="bi bi-house-heart"></i> <%= t('auth.secret_question') %>
+              </label>
+              <input type="text" class="form-control" id="neighbourhood_secret"
+                     name="neighbourhood_secret" required autocomplete="off"
+                     placeholder="<%= t('auth.secret_placeholder') %>">
+              <div class="form-text"><%= t('auth.secret_hint') %></div>
+            </div>
+
+            <!--
+              Honeypot field — anti-bot measure.
+
+              This field is INVISIBLE to real users (hidden with CSS).
+              Bots that auto-fill all form fields will fill this in.
+              If it has a value when submitted, we know it's a bot.
+
+              Important: we use CSS to hide it (not type="hidden" or display:none)
+              because sophisticated bots detect those methods.
+              The field name "website" sounds like a real field to bots.
+            -->
+            <div class="honeypot-field" aria-hidden="true">
+              <label for="website">Website</label>
+              <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
             </div>
 
             <button type="submit" class="btn btn-primary w-100 mb-3">
