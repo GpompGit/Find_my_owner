@@ -1,0 +1,150 @@
+<%- include('../partials/header', { title: user.name || user.email }) %>
+
+<main class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-person"></i> <%= user.name || user.email %></h2>
+    <a href="/admin/users" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
+    </a>
+  </div>
+
+  <!-- User info card -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p class="mb-1"><strong><%= t('auth.name') %>:</strong> <%= user.name || '-' %></p>
+          <p class="mb-1"><strong><%= t('auth.email') %>:</strong> <%= user.email %></p>
+          <p class="mb-1"><strong><%= t('auth.phone') %>:</strong> <%= user.phone || '-' %></p>
+          <p class="mb-0"><strong><%= t('admin.registered') %>:</strong> <%= new Date(user.created_at).toLocaleDateString('de-CH') %></p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+          <form method="POST" action="/admin/users/<%= user.id %>/delete"
+                onsubmit="return confirm('<%= t('admin.confirm_delete_user') %>')">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn-outline-danger">
+              <i class="bi bi-trash"></i> <%= t('admin.delete_user') %>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User's bikes -->
+  <h4 class="mb-3"><i class="bi bi-bicycle"></i> <%= t('admin.bikes') %> (<%= bikes.length %>)</h4>
+
+  <% if (bikes.length > 0) { %>
+    <div class="table-responsive mb-4">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th><%= t('dashboard.brand') %></th>
+            <th><%= t('dashboard.color') %></th>
+            <th><%= t('dashboard.status') %></th>
+            <th class="d-none d-md-table-cell"><%= t('dashboard.garage') %></th>
+            <th><%= t('dashboard.actions') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% bikes.forEach(bike => { %>
+            <tr class="<%= bike.status === 'stolen' ? 'table-danger' : '' %>">
+              <td><%= bike.brand %></td>
+              <td><%= bike.color %></td>
+              <td>
+                <% if (bike.status === 'active') { %>
+                  <span class="badge bg-success"><%= t('dashboard.status_active') %></span>
+                <% } else if (bike.status === 'stolen') { %>
+                  <span class="badge bg-danger"><%= t('dashboard.status_stolen') %></span>
+                <% } else { %>
+                  <span class="badge bg-secondary"><%= t('dashboard.status_inactive') %></span>
+                <% } %>
+              </td>
+              <td class="d-none d-md-table-cell">
+                <% if (bike.garage_parking) { %>
+                  <i class="bi bi-p-circle-fill text-primary"></i>
+                <% } %>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <!-- Status change dropdown -->
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                      <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <input type="hidden" name="status" value="active">
+                          <button type="submit" class="dropdown-item"><%= t('dashboard.status_active') %></button>
+                        </form>
+                      </li>
+                      <li>
+                        <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <input type="hidden" name="status" value="stolen">
+                          <button type="submit" class="dropdown-item text-danger"><%= t('dashboard.status_stolen') %></button>
+                        </form>
+                      </li>
+                      <li>
+                        <form method="POST" action="/admin/bikes/<%= bike.id %>/status">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <input type="hidden" name="status" value="inactive">
+                          <button type="submit" class="dropdown-item"><%= t('dashboard.status_inactive') %></button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- Print -->
+                  <a href="/admin/print/<%= bike.id %>" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-printer"></i>
+                  </a>
+                  <!-- Delete -->
+                  <form method="POST" action="/admin/bikes/<%= bike.id %>/delete"
+                        onsubmit="return confirm('<%= t('admin.confirm_delete_bike') %>')">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="text-muted mb-4"><%= t('dashboard.no_bikes') %></p>
+  <% } %>
+
+  <!-- Messages received by this user -->
+  <% if (messages.length > 0) { %>
+    <h4 class="mb-3"><i class="bi bi-envelope"></i> <%= t('admin.messages') %> (<%= messages.length %>)</h4>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th><%= t('admin.date') %></th>
+            <th><%= t('admin.bike') %></th>
+            <th><%= t('admin.from') %></th>
+            <th><%= t('public.message') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% messages.forEach(msg => { %>
+            <tr>
+              <td><%= new Date(msg.sent_at).toLocaleDateString('de-CH') %></td>
+              <td><%= msg.brand %> <%= msg.color %></td>
+              <td><%= msg.finder_name || '-' %></td>
+              <td><%= msg.message.substring(0, 100) %><%= msg.message.length > 100 ? '...' : '' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>
