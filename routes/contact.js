@@ -19,8 +19,17 @@
 const express = require('express')
 const db = require('../db/connection')
 const nodemailer = require('nodemailer')
+const escapeHtml = require('../utils/escapeHtml')
+const createRateLimiter = require('../middleware/rateLimit')
 
 const router = express.Router()
+
+// Rate limit contact form — max 10 messages per IP per hour
+const contactLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  keyFn: (req) => req.ip || 'unknown'
+})
 
 /**
  * Create the email transporter.
@@ -55,7 +64,7 @@ const transporter = nodemailer.createTransport({
  * 4. Email the bike owner
  * 5. Redirect to confirmation page
  */
-router.post('/contact/:id', async (req, res) => {
+router.post('/contact/:id', contactLimiter, async (req, res) => {
   try {
     const bikeId = req.params.id
     const { finder_name, finder_phone, message } = req.body
@@ -103,12 +112,12 @@ router.post('/contact/:id', async (req, res) => {
         subject: `Someone contacted you about your ${bike.brand} ${bike.color}`,
         html: `
           <h2>New message about your bicycle</h2>
-          <p><strong>Bike:</strong> ${bike.brand} ${bike.color}</p>
-          ${finder_name ? `<p><strong>From:</strong> ${finder_name}</p>` : ''}
-          ${finder_phone ? `<p><strong>Phone:</strong> ${finder_phone}</p>` : ''}
+          <p><strong>Bike:</strong> ${escapeHtml(bike.brand)} ${escapeHtml(bike.color)}</p>
+          ${finder_name ? `<p><strong>From:</strong> ${escapeHtml(finder_name)}</p>` : ''}
+          ${finder_phone ? `<p><strong>Phone:</strong> ${escapeHtml(finder_phone)}</p>` : ''}
           <p><strong>Message:</strong></p>
           <blockquote style="border-left: 3px solid #ccc; padding-left: 10px; color: #555;">
-            ${message.trim()}
+            ${escapeHtml(message.trim())}
           </blockquote>
           <hr>
           <small>

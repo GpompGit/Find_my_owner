@@ -26,6 +26,7 @@ const express = require('express')  // Web framework — handles HTTP requests
 const session = require('express-session')  // Session middleware — remembers logged-in users
 const flash = require('connect-flash')      // Flash messages — one-time notifications
 const cookieParser = require('cookie-parser')  // Parse cookies (needed for language preference)
+const helmet = require('helmet')              // Security headers (X-Frame-Options, CSP, etc.)
 const i18n = require('./middleware/i18n')       // Multi-language support (DE/EN/FR)
 
 // ─── 3. Import route files ──────────────────────────────────────────────────
@@ -54,6 +55,30 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
 // ─── 6. Configure middleware (order matters!) ───────────────────────────────
+
+/**
+ * Security headers via helmet.
+ *
+ * helmet() sets many HTTP headers that protect against common attacks:
+ * - X-Frame-Options: DENY — prevents clickjacking (your page in an iframe)
+ * - X-Content-Type-Options: nosniff — stops MIME type sniffing
+ * - Strict-Transport-Security — forces HTTPS on subsequent visits
+ * - Content-Security-Policy — controls which scripts/styles/images can load
+ *
+ * We relax the CSP to allow Bootstrap CDN and OpenStreetMap tiles.
+ */
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
+      connectSrc: ["'self'"]
+    }
+  }
+}))
 
 /**
  * Parse URL-encoded form data.
