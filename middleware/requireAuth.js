@@ -31,7 +31,7 @@ const requireAuth = (req, res, next) => {
   // No session or no userId — user is not logged in.
   // Store a flash message so the login page can show a friendly notice.
   // connect-flash stores messages in the session and clears them after display.
-  req.flash('error', 'Please log in to access this page')
+  req.flash('error', req.t ? req.t('auth.login_required') : 'Please log in to access this page')
 
   // Redirect to the login page (HTTP 302 — temporary redirect)
   res.redirect('/login')

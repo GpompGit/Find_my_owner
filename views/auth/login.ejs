@@ -1,74 +1,37 @@
-<%- include('../partials/header', { title: 'Login' }) %>
+<%- include('../partials/header', { title: t('auth.login_title') }) %>
 
-<!--
-  Login Page
-
-  Similar structure to register.ejs but with fewer fields.
-  Uses form-floating for a clean look.
-
-  autocomplete attributes:
-  - autocomplete="email" — browser offers saved emails
-  - autocomplete="current-password" — browser offers saved passwords
-  These improve user experience and work with password managers.
--->
 <main class="container py-5">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
-
-      <!-- Login card -->
       <div class="card shadow-sm">
         <div class="card-body p-4">
-
-          <!-- Card header with icon -->
           <h2 class="card-title text-center mb-4">
-            <i class="bi bi-box-arrow-in-right"></i> Login
+            <i class="bi bi-box-arrow-in-right"></i> <%= t('auth.login_title') %>
           </h2>
 
-          <!--
-            Login form
-            POST /login — handled by routes/auth.js
-          -->
           <form method="POST" action="/login">
-
-            <!-- Email -->
             <div class="form-floating mb-3">
-              <input type="email"
-                     class="form-control"
-                     id="email"
-                     name="email"
-                     placeholder="you@example.com"
-                     required
-                     autocomplete="email">
-              <label for="email"><i class="bi bi-envelope"></i> Email Address</label>
+              <input type="email" class="form-control" id="email" name="email"
+                     placeholder="<%= t('auth.email') %>" required autocomplete="email">
+              <label for="email"><i class="bi bi-envelope"></i> <%= t('auth.email') %></label>
             </div>
 
-            <!-- Password -->
             <div class="form-floating mb-4">
-              <input type="password"
-                     class="form-control"
-                     id="password"
-                     name="password"
-                     placeholder="Password"
-                     required
-                     autocomplete="current-password">
-              <label for="password"><i class="bi bi-lock"></i> Password</label>
+              <input type="password" class="form-control" id="password" name="password"
+                     placeholder="<%= t('auth.password') %>" required autocomplete="current-password">
+              <label for="password"><i class="bi bi-lock"></i> <%= t('auth.password') %></label>
             </div>
 
-            <!-- Submit button — full width -->
             <button type="submit" class="btn btn-primary w-100 mb-3">
-              <i class="bi bi-box-arrow-in-right"></i> Login
+              <i class="bi bi-box-arrow-in-right"></i> <%= t('auth.login_btn') %>
             </button>
-
           </form>
 
-          <!-- Link to registration page -->
           <p class="text-center text-muted mb-0">
-            Don't have an account? <a href="/register">Register here</a>
+            <%= t('auth.no_account') %> <a href="/register"><%= t('auth.register_here') %></a>
           </p>
-
         </div>
       </div>
-
     </div>
   </div>
 </main>

@@ -1,136 +1,69 @@
-<%- include('../partials/header', { title: 'Add Bike' }) %>
+<%- include('../partials/header', { title: t('bikes.add_title') }) %>
 
-<!--
-  Add Bike Form
-
-  enctype="multipart/form-data" is REQUIRED for file uploads.
-  Without it, the browser sends the form as URL-encoded text
-  and the file data is lost. Multer only processes multipart forms.
-
-  Bootstrap classes:
-  - col-12 col-md-8 col-lg-6 mx-auto: responsive centered column
-  - card/card-body: clean container for the form
-  - form-control: styled text inputs
-  - form-select: styled dropdown menus
-  - form-check: styled checkbox with label
--->
 <main class="container py-4">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">
+      <h2 class="mb-4"><i class="bi bi-plus-circle"></i> <%= t('bikes.add_title') %></h2>
 
-      <h2 class="mb-4"><i class="bi bi-plus-circle"></i> Register a Bike</h2>
-
-      <!--
-        enctype="multipart/form-data" tells the browser to send the form
-        as multipart data instead of URL-encoded. This is how file uploads work.
-        Without this attribute, req.file will be undefined in the route handler.
-      -->
       <form method="POST" action="/bikes/add" enctype="multipart/form-data">
-
-        <!-- Brand (required) -->
         <div class="card card-body mb-3">
-          <h6 class="card-title"><i class="bi bi-bicycle"></i> Bike Details</h6>
-
+          <h6 class="card-title"><i class="bi bi-bicycle"></i> <%= t('bikes.details') %></h6>
           <div class="mb-3">
-            <label for="brand" class="form-label">Brand</label>
+            <label for="brand" class="form-label"><%= t('bikes.brand') %></label>
             <input type="text" class="form-control" id="brand" name="brand"
-                   placeholder="e.g. Trek, Giant, Scott" required>
+                   placeholder="<%= t('bikes.brand_placeholder') %>" required>
           </div>
-
-          <!-- Color (required) -->
           <div class="mb-3">
-            <label for="color" class="form-label">Color</label>
+            <label for="color" class="form-label"><%= t('bikes.color') %></label>
             <input type="text" class="form-control" id="color" name="color"
-                   placeholder="e.g. Red, Blue, Black" required>
+                   placeholder="<%= t('bikes.color_placeholder') %>" required>
           </div>
-
-          <!-- Description (optional) -->
           <div class="mb-3">
-            <label for="description" class="form-label">Description (optional)</label>
+            <label for="description" class="form-label"><%= t('bikes.description') %></label>
             <textarea class="form-control" id="description" name="description"
                       rows="3" maxlength="300"
-                      placeholder="Any identifying details: model, size, accessories..."></textarea>
-            <div class="form-text">Maximum 300 characters</div>
+                      placeholder="<%= t('bikes.description_placeholder') %>"></textarea>
+            <div class="form-text"><%= t('bikes.description_max') %></div>
           </div>
         </div>
 
-        <!-- Photo upload -->
         <div class="card card-body mb-3">
-          <h6 class="card-title"><i class="bi bi-camera"></i> Bike Photo</h6>
-
-          <!--
-            type="file" creates a file picker button.
-            accept="image/*" tells the browser to only show image files
-            in the file picker dialog (but we also validate server-side).
-            name="photo" must match upload.single('photo') in the route.
-          -->
+          <h6 class="card-title"><i class="bi bi-camera"></i> <%= t('bikes.photo_title') %></h6>
           <div class="mb-0">
-            <label for="photo" class="form-label">Upload a photo (optional)</label>
-            <input type="file" class="form-control" id="photo" name="photo"
-                   accept="image/*">
-            <div class="form-text">JPEG, PNG, GIF, or WebP. Max 5 MB.</div>
+            <label for="photo" class="form-label"><%= t('bikes.upload_photo') %></label>
+            <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+            <div class="form-text"><%= t('bikes.photo_hint') %></div>
           </div>
         </div>
 
-        <!--
-          Garage parking checkbox
-          Uses Bootstrap's form-check component for styled checkboxes.
-          The checkbox value "1" is sent when checked, nothing when unchecked.
-          JavaScript toggles the info box visibility.
-        -->
         <fieldset class="card card-body mb-3">
-          <legend class="card-title h6"><i class="bi bi-p-circle"></i> Garage Parking</legend>
+          <legend class="card-title h6"><i class="bi bi-p-circle"></i> <%= t('bikes.garage_title') %></legend>
           <div class="form-check">
-            <input class="form-check-input" type="checkbox"
-                   name="garage_parking" value="1" id="garageParkingCheck">
-            <label class="form-check-label" for="garageParkingCheck">
-              This bicycle parks in the building garage
-            </label>
+            <input class="form-check-input" type="checkbox" name="garage_parking" value="1" id="garageParkingCheck">
+            <label class="form-check-label" for="garageParkingCheck"><%= t('bikes.garage_checkbox') %></label>
           </div>
-
-          <!--
-            Info box — hidden by default (d-none), shown by JavaScript
-            when the checkbox is checked.
-          -->
           <div id="garage-info" class="alert alert-info mt-2 mb-0 d-none">
-            <p class="mb-0">
-              Annual garage contribution: <strong>CHF 40.00 per bicycle</strong>.
-              Payment is voluntary via TWINT.
-              You will receive a TWINT payment QR code with your bike sticker.
-            </p>
+            <p class="mb-0"><%- t('bikes.garage_info') %></p>
           </div>
         </fieldset>
 
-        <!-- Form buttons -->
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Register Bike
+            <i class="bi bi-check-circle"></i> <%= t('bikes.register_btn') %>
           </button>
           <a href="/dashboard" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Cancel
+            <i class="bi bi-arrow-left"></i> <%= t('bikes.cancel_btn') %>
           </a>
         </div>
-
       </form>
     </div>
   </div>
 </main>
 
-<!--
-  Small inline script to toggle the garage info box.
-  When the checkbox is checked, remove 'd-none' to show the info.
-  When unchecked, add 'd-none' to hide it.
-
-  'd-none' is Bootstrap's utility class for display: none.
--->
 <script>
   document.getElementById('garageParkingCheck').addEventListener('change', function () {
     var info = document.getElementById('garage-info')
-    if (this.checked) {
-      info.classList.remove('d-none')
-    } else {
-      info.classList.add('d-none')
-    }
+    if (this.checked) { info.classList.remove('d-none') } else { info.classList.add('d-none') }
   })
 </script>
 

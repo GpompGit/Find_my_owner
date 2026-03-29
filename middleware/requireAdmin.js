@@ -29,7 +29,7 @@ const requireAdmin = (req, res, next) => {
 
   // User is logged in (requireAuth already checked that) but is not admin.
   // Return 403 Forbidden — they don't have permission for this resource.
-  req.flash('error', 'Admin access required')
+  req.flash('error', req.t ? req.t('errors.admin_required') : 'Admin access required')
   res.status(403).redirect('/dashboard')
 }
 

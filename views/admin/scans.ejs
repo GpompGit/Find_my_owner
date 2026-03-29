@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Scan History' }) %>
+<%- include('../partials/header', { title: t('admin.scan_history') }) %>
 
 <!--
   Admin — Scan History
@@ -10,11 +10,11 @@
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>
-      <i class="bi bi-qr-code-scan"></i> Scan History
+      <i class="bi bi-qr-code-scan"></i> <%= t('admin.scan_history') %>
       <span class="badge bg-secondary"><%= scans.length %></span>
     </h2>
     <a href="/admin" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Back
+      <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
     </a>
   </div>
 
@@ -22,11 +22,11 @@
     <table class="table table-striped table-hover">
       <thead class="table-dark">
         <tr>
-          <th>Date</th>
-          <th>Bike</th>
-          <th>Status</th>
-          <th class="d-none d-md-table-cell">Location</th>
-          <th class="d-none d-lg-table-cell">Device</th>
+          <th><%= t('admin.date') %></th>
+          <th><%= t('admin.bike') %></th>
+          <th><%= t('dashboard.status') %></th>
+          <th class="d-none d-md-table-cell"><%= t('admin.location') %></th>
+          <th class="d-none d-lg-table-cell"><%= t('admin.device') %></th>
         </tr>
       </thead>
       <tbody>
@@ -43,9 +43,9 @@
             <td><%= scan.brand %> <%= scan.color %></td>
             <td>
               <% if (scan.status === 'stolen') { %>
-                <span class="badge bg-danger">Stolen</span>
+                <span class="badge bg-danger"><%= t('dashboard.status_stolen') %></span>
               <% } else { %>
-                <span class="badge bg-success">Active</span>
+                <span class="badge bg-success"><%= t('dashboard.status_active') %></span>
               <% } %>
             </td>
             <td class="d-none d-md-table-cell">
@@ -86,11 +86,11 @@
   </div>
 
   <% if (scans.length === 0) { %>
-    <p class="text-center text-muted py-4">No scans recorded yet.</p>
+    <p class="text-center text-muted py-4"><%= t('admin.no_scans') %></p>
   <% } %>
 
   <% if (scans.length >= 200) { %>
-    <p class="text-center text-muted small">Showing the 200 most recent scans.</p>
+    <p class="text-center text-muted small"><%= t('admin.showing_recent') %></p>
   <% } %>
 </main>
 

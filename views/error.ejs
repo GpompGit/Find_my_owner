@@ -2,8 +2,8 @@
 
 <main class="container py-5 text-center">
   <h1 class="display-1 text-muted">500</h1>
-  <p class="lead"><%= message || 'An unexpected error occurred.' %></p>
-  <a href="/" class="btn btn-primary">Go to Home</a>
+  <p class="lead"><%= message || t('errors.server_error') %></p>
+  <a href="/" class="btn btn-primary"><%= t('errors.go_home') %></a>
 </main>
 
 <%- include('partials/footer') %>

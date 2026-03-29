@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
     })
   } catch (err) {
     console.error('Admin dashboard error:', err.message)
-    req.flash('error', 'Could not load dashboard data.')
+    req.flash('error', req.t('errors.load_failed'))
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
       stats: { users: 0, bikes: 0, stolen: 0, garage: 0, scans: 0, messages: 0 }
@@ -120,7 +120,7 @@ router.get('/bikes', async (req, res) => {
     res.render('admin/bike-list', { title: 'All Bikes', bikes })
   } catch (err) {
     console.error('Admin bikes error:', err.message)
-    req.flash('error', 'Could not load bikes.')
+    req.flash('error', req.t('errors.load_failed'))
     res.render('admin/bike-list', { title: 'All Bikes', bikes: [] })
   }
 })
@@ -146,7 +146,7 @@ router.get('/print/:id', async (req, res) => {
     )
 
     if (rows.length === 0) {
-      req.flash('error', 'Bike not found')
+      req.flash('error', req.t('bikes.not_found'))
       return res.redirect('/admin/bikes')
     }
 
@@ -230,7 +230,7 @@ router.get('/garage', async (req, res) => {
     })
   } catch (err) {
     console.error('Admin garage error:', err.message)
-    req.flash('error', 'Could not load garage data.')
+    req.flash('error', req.t('errors.load_failed'))
     res.render('admin/garage', {
       title: 'Garage Management',
       garageBikes: [],
@@ -263,7 +263,7 @@ router.post('/payment/:id', async (req, res) => {
     )
 
     if (rows.length === 0) {
-      req.flash('error', 'Bike not found or not a garage user')
+      req.flash('error', req.t('bikes.not_found'))
       return res.redirect('/admin/garage')
     }
 
@@ -312,11 +312,11 @@ router.post('/payment/:id', async (req, res) => {
       console.error('Payment confirmation email failed:', emailErr.message)
     }
 
-    req.flash('success', `Payment received for ${bike.brand} ${bike.color}`)
+    req.flash('success', `${req.t('admin.payment_received')} ${bike.brand} ${bike.color}`)
     res.redirect('/admin/garage')
   } catch (err) {
     console.error('Admin payment error:', err.message)
-    req.flash('error', 'Failed to process payment.')
+    req.flash('error', req.t('errors.load_failed'))
     res.redirect('/admin/garage')
   }
 })
@@ -345,7 +345,7 @@ router.get('/scans', async (req, res) => {
     res.render('admin/scans', { title: 'Scan History', scans })
   } catch (err) {
     console.error('Admin scans error:', err.message)
-    req.flash('error', 'Could not load scan history.')
+    req.flash('error', req.t('errors.load_failed'))
     res.render('admin/scans', { title: 'Scan History', scans: [] })
   }
 })

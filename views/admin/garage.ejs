@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Garage Management' }) %>
+<%- include('../partials/header', { title: t('admin.garage_mgmt') }) %>
 
 <!--
   Admin — Garage Management
@@ -15,16 +15,16 @@
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>
-      <i class="bi bi-p-circle"></i> Garage Users
-      <span class="badge bg-secondary"><%= garageBikes.length %> bikes</span>
+      <i class="bi bi-p-circle"></i> <%= t('admin.garage_mgmt') %>
+      <span class="badge bg-secondary"><%= garageBikes.length %> <%= t('admin.bikes') %></span>
     </h2>
     <div class="text-end">
       <span class="text-muted">
-        CHF <%= totalExpected.toFixed(2) %> / year expected
+        CHF <%= totalExpected.toFixed(2) %> <%= t('admin.year_expected') %>
       </span>
       <br>
       <a href="/admin" class="btn btn-sm btn-outline-secondary mt-1">
-        <i class="bi bi-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
       </a>
     </div>
   </div>
@@ -33,12 +33,12 @@
     <table class="table table-striped table-hover">
       <thead class="table-dark">
         <tr>
-          <th>Owner</th>
-          <th>Bike</th>
-          <th class="d-none d-md-table-cell">Registered</th>
-          <th>Due</th>
-          <th>Status</th>
-          <th>Action</th>
+          <th><%= t('admin.owner') %></th>
+          <th><%= t('admin.bike') %></th>
+          <th class="d-none d-md-table-cell"><%= t('admin.registered') %></th>
+          <th><%= t('admin.due') %></th>
+          <th><%= t('dashboard.status') %></th>
+          <th><%= t('admin.action') %></th>
         </tr>
       </thead>
       <tbody>
@@ -66,13 +66,13 @@
                 Overdue gets a special red badge regardless of stored status.
               -->
               <% if (isOverdue) { %>
-                <span class="badge bg-danger">OVERDUE</span>
+                <span class="badge bg-danger"><%= t('admin.status_overdue') %></span>
               <% } else if (bike.payment_status === 'paid') { %>
-                <span class="badge bg-success">Paid</span>
+                <span class="badge bg-success"><%= t('admin.status_paid') %></span>
               <% } else if (bike.payment_status === 'exempt') { %>
-                <span class="badge bg-secondary">Exempt</span>
+                <span class="badge bg-secondary"><%= t('admin.status_exempt') %></span>
               <% } else { %>
-                <span class="badge bg-warning text-dark">Pending</span>
+                <span class="badge bg-warning text-dark"><%= t('admin.status_pending') %></span>
               <% } %>
             </td>
             <td>
@@ -83,7 +83,7 @@
               <% if (bike.payment_status !== 'paid' && bike.payment_status !== 'exempt') { %>
                 <form method="POST" action="/admin/payment/<%= bike.id %>" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-check-circle"></i> Mark paid
+                    <i class="bi bi-check-circle"></i> <%= t('admin.mark_paid') %>
                   </button>
                 </form>
               <% } else if (bike.payment_status === 'paid' && bike.payment_date) { %>
@@ -99,7 +99,7 @@
   </div>
 
   <% if (garageBikes.length === 0) { %>
-    <p class="text-center text-muted py-4">No garage users registered yet.</p>
+    <p class="text-center text-muted py-4"><%= t('admin.no_garage_users') %></p>
   <% } %>
 </main>
 

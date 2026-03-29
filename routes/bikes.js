@@ -143,7 +143,7 @@ router.post('/add', requireAuth, upload.single('photo'), async (req, res) => {
 
     // ── Validate required fields ──
     if (!brand || !color) {
-      req.flash('error', 'Brand and color are required')
+      req.flash('error', req.t('bikes.brand_color_required'))
       return res.redirect('/bikes/add')
     }
 
@@ -206,11 +206,11 @@ router.post('/add', requireAuth, upload.single('photo'), async (req, res) => {
       }
     }
 
-    req.flash('success', `Bike registered! QR code generated for ${brand} ${color}`)
+    req.flash('success', `${req.t('bikes.registered_success')} ${brand} ${color}`)
     res.redirect('/dashboard')
   } catch (err) {
     console.error('Add bike error:', err.message)
-    req.flash('error', 'Failed to register bike. Please try again.')
+    req.flash('error', req.t('bikes.add_failed'))
     res.redirect('/bikes/add')
   }
 })
@@ -245,7 +245,7 @@ router.post('/edit/:id', requireAuth, requireOwner, upload.single('photo'), asyn
 
     // ── Validate required fields ──
     if (!brand || !color) {
-      req.flash('error', 'Brand and color are required')
+      req.flash('error', req.t('bikes.brand_color_required'))
       return res.redirect(`/bikes/edit/${bikeId}`)
     }
 
@@ -299,11 +299,11 @@ router.post('/edit/:id', requireAuth, requireOwner, upload.single('photo'), asyn
       }
     }
 
-    req.flash('success', 'Bike updated successfully')
+    req.flash('success', req.t('bikes.updated_success'))
     res.redirect('/dashboard')
   } catch (err) {
     console.error('Edit bike error:', err.message)
-    req.flash('error', 'Failed to update bike. Please try again.')
+    req.flash('error', req.t('bikes.update_failed'))
     res.redirect(`/bikes/edit/${req.params.id}`)
   }
 })
@@ -362,11 +362,11 @@ router.post('/delete/:id', requireAuth, requireOwner, async (req, res) => {
       } catch (e) { /* File might not exist */ }
     }
 
-    req.flash('success', `${bike.brand} ${bike.color} has been deleted`)
+    req.flash('success', `${bike.brand} ${bike.color} ${req.t('bikes.deleted_success')}`)
     res.redirect('/dashboard')
   } catch (err) {
     console.error('Delete bike error:', err.message)
-    req.flash('error', 'Failed to delete bike. Please try again.')
+    req.flash('error', req.t('bikes.delete_failed'))
     res.redirect('/dashboard')
   }
 })
@@ -387,11 +387,11 @@ router.post('/stolen/:id', requireAuth, requireOwner, async (req, res) => {
       [req.bike.id, req.session.userId]
     )
 
-    req.flash('success', `${req.bike.brand} ${req.bike.color} marked as stolen. GPS tracking is now active on scans.`)
+    req.flash('success', `${req.bike.brand} ${req.bike.color} ${req.t('bikes.stolen_success')}`)
     res.redirect('/dashboard')
   } catch (err) {
     console.error('Mark stolen error:', err.message)
-    req.flash('error', 'Failed to update bike status.')
+    req.flash('error', req.t('bikes.status_failed'))
     res.redirect('/dashboard')
   }
 })
@@ -411,11 +411,11 @@ router.post('/recovered/:id', requireAuth, requireOwner, async (req, res) => {
       [req.bike.id, req.session.userId]
     )
 
-    req.flash('success', `${req.bike.brand} ${req.bike.color} marked as recovered!`)
+    req.flash('success', `${req.bike.brand} ${req.bike.color} ${req.t('bikes.recovered_success')}`)
     res.redirect('/dashboard')
   } catch (err) {
     console.error('Mark recovered error:', err.message)
-    req.flash('error', 'Failed to update bike status.')
+    req.flash('error', req.t('bikes.status_failed'))
     res.redirect('/dashboard')
   }
 })

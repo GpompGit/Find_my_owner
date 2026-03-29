@@ -25,6 +25,8 @@ const path = require('path')        // Node built-in: file path utilities
 const express = require('express')  // Web framework — handles HTTP requests
 const session = require('express-session')  // Session middleware — remembers logged-in users
 const flash = require('connect-flash')      // Flash messages — one-time notifications
+const cookieParser = require('cookie-parser')  // Parse cookies (needed for language preference)
+const i18n = require('./middleware/i18n')       // Multi-language support (DE/EN/FR)
 
 // ─── 3. Import route files ──────────────────────────────────────────────────
 // Each file handles a group of related routes (see routes/ folder)
@@ -98,6 +100,14 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 /**
+ * Cookie parser — reads cookies from incoming requests.
+ *
+ * Required by the i18n middleware to read the 'lang' cookie
+ * (the user's language preference). Must be loaded BEFORE i18n.
+ */
+app.use(cookieParser())
+
+/**
  * Session middleware — how the app remembers who is logged in.
  *
  * HTTP is "stateless" — each request is independent. The browser doesn't
@@ -147,6 +157,20 @@ app.use(session({
  * connect-flash requires express-session to work (flash data lives in the session).
  */
 app.use(flash())
+
+/**
+ * i18n middleware — multi-language support.
+ *
+ * Determines the user's preferred language from:
+ * 1. ?lang= query parameter (manual switch)
+ * 2. 'lang' cookie (previous choice)
+ * 3. Accept-Language header (browser setting)
+ * 4. Default: German (de)
+ *
+ * Makes t() translation function and lang available in all templates.
+ * Also available in route handlers as req.t() and req.lang.
+ */
+app.use(i18n)
 
 /**
  * Make flash messages and session data available to ALL templates.

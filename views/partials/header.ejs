@@ -8,16 +8,19 @@
   1. The HTML document head (meta, CSS, title)
   2. Bootstrap 5 CSS + Bootstrap Icons via CDN
   3. Custom stylesheet (style.css)
-  4. Responsive navigation bar
+  4. Responsive navigation bar with language switcher
   5. Flash message display area
 
-  Variables available (set by res.locals in app.js):
-  - title:       Page title (passed when including this partial)
-  - currentUser: { id, name, isAdmin } — null values if not logged in
-  - messages:    { success: [...], error: [...] } — flash messages
+  Variables available (set by res.locals in app.js and i18n middleware):
+  - title:          Page title (passed when including this partial)
+  - currentUser:    { id, name, isAdmin } — null values if not logged in
+  - messages:       { success: [...], error: [...] } — flash messages
+  - t:              Translation function — t('nav.dashboard') → translated string
+  - lang:           Current language code ('de', 'en', 'fr')
+  - supportedLangs: Array of supported language codes
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8">
 
@@ -51,24 +54,20 @@
 <body>
 
   <!--
-    Navigation Bar
-
-    Bootstrap navbar component:
-    - navbar-expand-lg: collapses into a hamburger menu on screens < 992px
-    - navbar-dark bg-dark: white text on dark background
-    - The navbar-toggler button appears on mobile and toggles the menu
+    Navigation Bar — now with language switcher
 
     We show different links based on whether the user is logged in:
     - Not logged in: Login, Register
     - Logged in: Dashboard, Add Bike, Logout
     - Admin: additional Admin link
+    - Always: Language dropdown (DE/EN/FR)
   -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
 
       <!-- Brand/logo — always visible, links to home -->
       <a class="navbar-brand" href="/">
-        <i class="bi bi-bicycle"></i> Quartier Bike ID
+        <i class="bi bi-bicycle"></i> <%= t('nav.brand') %>
       </a>
 
       <!--
@@ -92,27 +91,66 @@
             <!-- Show these links only when logged in -->
             <li class="nav-item">
               <a class="nav-link" href="/dashboard">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2"></i> <%= t('nav.dashboard') %>
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/bikes/add">
-                <i class="bi bi-plus-circle"></i> Add Bike
+                <i class="bi bi-plus-circle"></i> <%= t('nav.add_bike') %>
               </a>
             </li>
             <% if (currentUser.isAdmin) { %>
               <!-- Admin-only link -->
               <li class="nav-item">
                 <a class="nav-link" href="/admin">
-                  <i class="bi bi-shield-lock"></i> Admin
+                  <i class="bi bi-shield-lock"></i> <%= t('nav.admin') %>
                 </a>
               </li>
             <% } %>
           <% } %>
         </ul>
 
-        <!-- Right-side navigation (login/logout) -->
+        <!-- Right-side navigation (language switcher + login/logout) -->
         <ul class="navbar-nav">
+
+          <!--
+            Language Switcher — Bootstrap dropdown.
+
+            Each option links to the current page with ?lang=xx appended.
+            The i18n middleware reads this, sets a cookie, and redirects
+            back to the clean URL. The choice persists across requests.
+
+            The current language is shown as the dropdown button text.
+            Flag emojis give a visual hint for each language.
+          -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-translate"></i>
+              <%= lang.toUpperCase() %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item <%= lang === 'de' ? 'active' : '' %>"
+                   href="?lang=de">
+                  DE — Deutsch
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item <%= lang === 'en' ? 'active' : '' %>"
+                   href="?lang=en">
+                  EN — English
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item <%= lang === 'fr' ? 'active' : '' %>"
+                   href="?lang=fr">
+                  FR — Francais
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <% if (currentUser.id) { %>
             <!-- Logged in: show user name and logout -->
             <li class="nav-item">
@@ -122,19 +160,19 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/logout">
-                <i class="bi bi-box-arrow-right"></i> Logout
+                <i class="bi bi-box-arrow-right"></i> <%= t('nav.logout') %>
               </a>
             </li>
           <% } else { %>
             <!-- Not logged in: show login and register links -->
             <li class="nav-item">
               <a class="nav-link" href="/login">
-                <i class="bi bi-box-arrow-in-right"></i> Login
+                <i class="bi bi-box-arrow-in-right"></i> <%= t('nav.login') %>
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/register">
-                <i class="bi bi-person-plus"></i> Register
+                <i class="bi bi-person-plus"></i> <%= t('nav.register') %>
               </a>
             </li>
           <% } %>

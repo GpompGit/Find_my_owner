@@ -1,9 +1,9 @@
-<%- include('partials/header', { title: 'Page Not Found' }) %>
+<%- include('partials/header', { title: '404' }) %>
 
 <main class="container py-5 text-center">
   <h1 class="display-1 text-muted">404</h1>
-  <p class="lead">The page you're looking for doesn't exist.</p>
-  <a href="/" class="btn btn-primary">Go to Home</a>
+  <p class="lead"><%= t('errors.not_found') %></p>
+  <a href="/" class="btn btn-primary"><%= t('errors.go_home') %></a>
 </main>
 
 <%- include('partials/footer') %>
