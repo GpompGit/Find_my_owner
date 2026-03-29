@@ -1,0 +1,155 @@
+# docker-compose.yml — Quartier Bike ID
+#
+# Starts the entire application with ONE command:
+#   docker-compose up -d
+#
+# Two services:
+#   1. app  — Node.js Express application (port 8080)
+#   2. db   — MariaDB database (port 3307)
+#
+# Data persistence:
+#   - Database data is stored in a Docker volume (survives container restarts)
+#   - Uploaded photos and QR codes are stored in a Docker volume
+#   - The .env file is mounted from the host (not baked into the image)
+#
+# First run:
+#   1. Copy .env.example to .env and fill in your values
+#   2. Run: docker-compose up -d
+#   3. MariaDB auto-imports schema.sql on first start
+#   4. App connects to db once MariaDB is ready
+#
+# Useful commands:
+#   docker-compose up -d          — start in background
+#   docker-compose down           — stop everything
+#   docker-compose logs -f app    — follow app logs
+#   docker-compose logs -f db     — follow database logs
+#   docker-compose restart app    — restart the app only
+#   docker-compose exec db mysql -u root -p  — connect to database
+
+version: '3.8'
+
+services:
+
+  # ─── Application Container ──────────────────────────────────────────────
+  app:
+    # Build the image from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Container name — shows in 'docker ps' output
+    container_name: quartier-bike-id
+
+    # Restart policy — always restart unless manually stopped.
+    # This survives NAS reboots (Docker auto-starts on boot).
+    restart: unless-stopped
+
+    # Port mapping — host:container
+    # The app inside the container listens on 8080,
+    # and we expose it on the host's port 8080.
+    ports:
+      - "8080:8080"
+
+    # Environment file — loads variables from .env on the host.
+    # This is where secrets live (DB password, session secret, etc.).
+    # The .env file is NOT copied into the image (security).
+    env_file:
+      - .env
+
+    # Override database host — inside Docker, services talk by service name.
+    # Instead of localhost, the app connects to 'db' (the MariaDB container).
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - NODE_ENV=production
+
+    # Persistent volumes — data survives container rebuilds
+    volumes:
+      # Uploaded bike photos — stored on the host, not inside the container
+      - uploads_photos:/app/uploads/photos
+      # Generated QR code images
+      - uploads_qr:/app/uploads/qr
+      # Garage photo for the landing page
+      - ./public/img:/app/public/img:ro
+
+    # Wait for the database to be ready before starting the app.
+    # depends_on only waits for the container to START, not for MariaDB
+    # to be ready. The app's connection pool handles retries automatically.
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Network — both containers share the same internal network
+    networks:
+      - bike-network
+
+  # ─── Database Container ─────────────────────────────────────────────────
+  db:
+    # Official MariaDB image — version 10 for compatibility with Synology
+    image: mariadb:10
+
+    container_name: quartier-bike-id-db
+
+    restart: unless-stopped
+
+    # MariaDB configuration via environment variables.
+    # These are used on FIRST START ONLY to create the database and user.
+    # After that, data persists in the volume.
+    environment:
+      # Root password — needed for admin access
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeme_root}
+      # Create the application database automatically
+      MYSQL_DATABASE: ${DB_NAME:-quartier_bikes}
+      # Create the application user with a password
+      MYSQL_USER: ${DB_USER:-bikeapp}
+      MYSQL_PASSWORD: ${DB_PASS:-changeme_app}
+
+    # Port mapping — MariaDB inside Docker uses standard 3306.
+    # We expose it on 3307 on the host to match the Synology convention.
+    ports:
+      - "3307:3306"
+
+    # Persistent volume for database files.
+    # Without this, ALL DATA IS LOST when the container is removed.
+    volumes:
+      # Database data files — the actual tables and rows
+      - db_data:/var/lib/mysql
+      # Auto-import schema on first start.
+      # Files in /docker-entrypoint-initdb.d/ are executed once
+      # when the database is created for the first time.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+    # Health check — Docker checks if MariaDB is ready to accept connections.
+    # The app container waits for this before starting.
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Character set — ensure utf8mb4 for emoji and special character support
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+    networks:
+      - bike-network
+
+# ─── Named Volumes ───────────────────────────────────────────────────────
+# Docker manages these volumes — they persist across container rebuilds.
+# To see where they're stored: docker volume inspect quartier-bike-id_db_data
+volumes:
+  db_data:
+    name: quartier-bike-id-db-data
+  uploads_photos:
+    name: quartier-bike-id-photos
+  uploads_qr:
+    name: quartier-bike-id-qr
+
+# ─── Network ─────────────────────────────────────────────────────────────
+# Internal network — containers can talk to each other by service name.
+# The app connects to 'db:3306' instead of 'localhost:3307'.
+networks:
+  bike-network:
+    name: quartier-bike-network
