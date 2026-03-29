@@ -7,11 +7,13 @@
 - NEVER use template literals for SQL with user-supplied values
 - This applies to ALL queries — SELECT, INSERT, UPDATE, DELETE
 
-## Authentication
+## Authentication (Magic Link — Passwordless)
 
-- Hash passwords with bcrypt, minimum 12 salt rounds
-- Never store plaintext passwords anywhere — not in logs, not in comments, not in error messages
-- Compare passwords with `bcrypt.compare()` — never with `===`
+- No passwords are stored or transmitted — authentication is via magic link email
+- Generate tokens with `crypto.randomBytes(32)` — never use predictable values
+- Magic link tokens MUST expire (default: 15 minutes)
+- Tokens are single-use — mark as `used = TRUE` after verification
+- Clean up expired tokens regularly (nightly cleanup job)
 - Store user ID in session after login: `req.session.userId`
 - Destroy session completely on logout: `req.session.destroy()`
 

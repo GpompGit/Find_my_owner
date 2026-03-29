@@ -1,13 +1,24 @@
 -- Quartier Bike ID — Database Schema
 
--- Users (neighbours)
+-- Users (neighbours) — passwordless magic link auth
+-- No password_hash column — authentication is via email magic links
 CREATE TABLE users (
   id             INT PRIMARY KEY AUTO_INCREMENT,
   email          VARCHAR(150) UNIQUE NOT NULL,
-  password_hash  VARCHAR(255) NOT NULL,
-  name           VARCHAR(100) NOT NULL,
+  name           VARCHAR(100),
   phone          VARCHAR(30),
-  verified       BOOLEAN DEFAULT FALSE,
+  created_at     DATETIME DEFAULT NOW()
+);
+
+-- Magic link tokens — used for both registration and login
+-- A new token is generated each time a user requests a login link.
+-- Tokens expire after 15 minutes and are single-use.
+CREATE TABLE magic_tokens (
+  id             INT PRIMARY KEY AUTO_INCREMENT,
+  email          VARCHAR(150) NOT NULL,
+  token          VARCHAR(64) UNIQUE NOT NULL,
+  expires_at     DATETIME NOT NULL,
+  used           BOOLEAN DEFAULT FALSE,
   created_at     DATETIME DEFAULT NOW()
 );
 

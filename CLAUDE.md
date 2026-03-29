@@ -8,7 +8,7 @@ A community bicycle registration and identification system running entirely on a
 
 ## Goals
 
-- Neighbours self-register with email + password — each user sees only their own bicycles
+- Neighbours self-register with email — passwordless login via magic link
 - Each user can add unlimited bicycles with Edit / Delete / Report Stolen per bike
 - Generate a unique QR code per bicycle automatically at registration
 - Print QR labels on a Dymo LabelWriter 450 Twin Turbo from admin panel
@@ -43,7 +43,7 @@ The application runs on **DS713+** (lab NAS). DS713+ supports Docker and Node.js
 |Runtime        |Node.js (LTS)                    |Available as Synology package, async I/O|
 |Web framework  |Express.js                       |Lightweight, well documented            |
 |Database       |MariaDB                          |Synology native package, relational     |
-|Auth           |bcrypt + express-session         |Industry standard password hashing      |
+|Auth           |Magic link + express-session      |Passwordless email login, no passwords  |
 |QR generation  |`qrcode` npm package             |SVG + PNG output, print-ready           |
 |Photo handling |`multer`                         |Multipart form uploads                  |
 |Email          |`nodemailer`                     |Admin + user notifications              |
@@ -170,14 +170,22 @@ Use `style.css` for project-specific overrides only — do not duplicate what Bo
 ## Database Schema
 
 ```sql
--- Users (neighbours)
+-- Users (neighbours) — passwordless magic link auth
 CREATE TABLE users (
   id             INT PRIMARY KEY AUTO_INCREMENT,
   email          VARCHAR(150) UNIQUE NOT NULL,
-  password_hash  VARCHAR(255) NOT NULL,
   name           VARCHAR(100) NOT NULL,
   phone          VARCHAR(30),
-  verified       BOOLEAN DEFAULT FALSE,
+  created_at     DATETIME DEFAULT NOW()
+);
+
+-- Magic link tokens — used for both registration and login
+CREATE TABLE magic_tokens (
+  id             INT PRIMARY KEY AUTO_INCREMENT,
+  email          VARCHAR(150) NOT NULL,
+  token          VARCHAR(64) UNIQUE NOT NULL,
+  expires_at     DATETIME NOT NULL,
+  used           BOOLEAN DEFAULT FALSE,
   created_at     DATETIME DEFAULT NOW()
 );
 
@@ -229,21 +237,52 @@ CREATE TABLE contact_messages (
 
 ## Authentication & Security
 
-### Password hashing (bcrypt)
+### Magic Link Authentication (Passwordless)
+
+No passwords are stored or transmitted. Users authenticate via email:
+
+```
+1. User enters email → POST /login
+2. Server generates a random token (crypto.randomBytes)
+3. Token saved to magic_tokens table with 15-minute expiry
+4. Email sent with link: https://bikes.yourdomain.com/auth/verify/<token>
+5. User clicks link → GET /auth/verify/<token>
+6. Server validates token (exists, not expired, not used)
+7. Token marked as used, session created
+8. If email not in users table → redirect to /register/complete (enter name + phone)
+9. If email exists → redirect to /dashboard
+```
 
 ```javascript
-const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 
-// Registration
-const hash = await bcrypt.hash(plainPassword, 12)
+// Generate magic link token (URL-safe, 32 bytes = 64 hex chars)
+const token = crypto.randomBytes(32).toString('hex')
+const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+
 await db.query(
-  'INSERT INTO users (email, password_hash, name, phone) VALUES (?,?,?,?)',
-  [email, hash, name, phone]
+  'INSERT INTO magic_tokens (email, token, expires_at) VALUES (?, ?, ?)',
+  [email, token, expiresAt]
 )
 
-// Login
-const match = await bcrypt.compare(plainPassword, storedHash)
-if (match) req.session.userId = user.id
+// Send email with magic link
+const magicLink = `${process.env.BASE_URL}/auth/verify/${token}`
+await sendMagicLinkEmail(email, magicLink)
+```
+
+```javascript
+// Verify magic link token
+const [rows] = await db.query(
+  'SELECT email FROM magic_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+  [token]
+)
+if (rows.length === 0) return res.render('auth/link-expired')
+
+// Mark token as used (single-use)
+await db.query('UPDATE magic_tokens SET used = TRUE WHERE token = ?', [token])
+
+// Create session
+req.session.userId = user.id
 ```
 
 ### Ownership validation — applied to every bike route
@@ -279,10 +318,11 @@ app.use(session({
 |Route                      |Access      |Description                          |
 |---------------------------|------------|-------------------------------------|
 |`GET /`                    |Public      |Landing page                         |
-|`GET /register`            |Public      |Create account form                  |
-|`POST /register`           |Public      |Save user + send verification email  |
-|`GET /login`               |Public      |Login form                           |
-|`POST /login`              |Public      |Authenticate + create session        |
+|`GET /login`               |Public      |Email form (login + register)        |
+|`POST /login`              |Public      |Send magic link email                |
+|`GET /auth/verify/:token`  |Public      |Verify magic link, create session    |
+|`GET /register/complete`   |Auth (new)  |Enter name + phone (first login only)|
+|`POST /register/complete`  |Auth (new)  |Save name + phone, redirect dashboard|
 |`GET /logout`              |Auth        |Destroy session                      |
 |`GET /dashboard`           |Auth        |User's own bikes list                |
 |`GET /bikes/add`           |Auth        |Add new bike form                    |
@@ -720,7 +760,7 @@ DB_PASS=yourdbpassword
 DB_NAME=quartier_bikes
 SESSION_SECRET=yourSessionSecret
 ADMIN_EMAIL=guillermo@youremail.com
-ADMIN_PASSWORD_HASH=bcrypt_hashed_admin_password
+MAGIC_LINK_EXPIRY_MINUTES=15
 SMTP_HOST=smtp.yourprovider.com
 SMTP_PORT=587
 SMTP_USER=youremail@domain.com
@@ -738,7 +778,7 @@ TWINT_PAYMENT_URL=https://payment.twint.ch/yourlink
 ```bash
 npm install express
 npm install express-session
-npm install bcrypt
+## Removed: bcrypt (no passwords — magic link auth)
 npm install connect-flash
 npm install qrcode
 npm install uuid

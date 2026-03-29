@@ -164,15 +164,10 @@
               </a>
             </li>
           <% } else { %>
-            <!-- Not logged in: show login and register links -->
+            <!-- Not logged in: show login link (handles both login and registration) -->
             <li class="nav-item">
               <a class="nav-link" href="/login">
                 <i class="bi bi-box-arrow-in-right"></i> <%= t('nav.login') %>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/register">
-                <i class="bi bi-person-plus"></i> <%= t('nav.register') %>
               </a>
             </li>
           <% } %>
