@@ -12,6 +12,113 @@
  * - Any layout that Bootstrap doesn't provide out of the box
  */
 
+/* ─── Hero Section (Landing Page) ────────────────────────────────────────── */
+
+/*
+ * The hero section has a split layout: text left, photo right.
+ * A subtle gradient background gives depth without overwhelming.
+ */
+.hero-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  overflow: hidden;
+}
+
+/*
+ * Photo wrapper — creates the rounded card-like frame with shadow.
+ * position: relative is needed for the floating badge overlay.
+ */
+.hero-photo-wrapper {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* The garage photo — fills the wrapper, crops to fit */
+.hero-photo {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  display: block;
+}
+
+/* On larger screens, the photo can be taller */
+@media (min-width: 992px) {
+  .hero-photo {
+    height: 400px;
+  }
+}
+
+/*
+ * Floating badge — overlays the bottom-left corner of the photo.
+ * Shows a trust signal like "Swiss hosted · Private · Secure".
+ */
+.hero-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #198754;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── How It Works Steps ─────────────────────────────────────────────────── */
+
+/*
+ * Numbered circle for each step in the "How It Works" section.
+ * Used on both the landing page and the login page.
+ */
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+/* Login page step numbers — inline with text, smaller */
+.login-step-num {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* ─── Feature Icons (Landing Page) ───────────────────────────────────────── */
+
+/*
+ * Circular icon container for feature cards.
+ * Uses Bootstrap's bg-opacity classes for the colour fill.
+ */
+.feature-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
 /* ─── Brand Colors ───────────────────────────────────────────────────────── */
 
 :root {

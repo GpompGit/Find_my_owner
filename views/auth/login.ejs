@@ -1,16 +1,65 @@
 <%- include('../partials/header', { title: t('auth.login_title') }) %>
 
 <!--
-  Login Page — Magic Link (Passwordless) with Security Layers
+  Login Page — with "How It Works" explanation
 
-  Three security measures:
-  1. Neighbourhood secret question — only Baumgarten residents know the answer
-  2. Honeypot field — hidden input that bots fill in, humans never see
-  3. Rate limiting — handled server-side (max 5 requests/hour/email)
+  Two sections:
+  1. How-it-works steps — explains the process before the user commits
+  2. Login form — email + secret question + honeypot
 -->
 <main class="container py-5">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
+
+      <!--
+        How It Works — shown above the login form.
+        Explains the magic link process so neighbours understand
+        what will happen before they enter their email.
+      -->
+      <div class="card shadow-sm mb-4 border-primary border-opacity-25">
+        <div class="card-body p-4">
+          <h5 class="card-title text-center mb-3">
+            <i class="bi bi-info-circle text-primary"></i> <%= t('auth.how_it_works_title') %>
+          </h5>
+
+          <!-- Step-by-step list with icons -->
+          <div class="d-flex align-items-start mb-3">
+            <span class="login-step-num me-3">1</span>
+            <div>
+              <strong><%= t('auth.step1_title') %></strong>
+              <p class="text-muted small mb-0"><%= t('auth.step1_text') %></p>
+            </div>
+          </div>
+          <div class="d-flex align-items-start mb-3">
+            <span class="login-step-num me-3">2</span>
+            <div>
+              <strong><%= t('auth.step2_title') %></strong>
+              <p class="text-muted small mb-0"><%= t('auth.step2_text') %></p>
+            </div>
+          </div>
+          <div class="d-flex align-items-start mb-3">
+            <span class="login-step-num me-3">3</span>
+            <div>
+              <strong><%= t('auth.step3_title') %></strong>
+              <p class="text-muted small mb-0"><%= t('auth.step3_text') %></p>
+            </div>
+          </div>
+          <div class="d-flex align-items-start mb-0">
+            <span class="login-step-num me-3">4</span>
+            <div>
+              <strong><%= t('auth.step4_title') %></strong>
+              <p class="text-muted small mb-0"><%= t('auth.step4_text') %></p>
+            </div>
+          </div>
+
+          <hr>
+          <p class="text-center text-muted small mb-0">
+            <i class="bi bi-lock"></i> <%= t('auth.no_password_note') %>
+          </p>
+        </div>
+      </div>
+
+      <!-- Login form -->
       <div class="card shadow-sm">
         <div class="card-body p-4">
 
@@ -31,13 +80,7 @@
               <label for="email"><i class="bi bi-envelope"></i> <%= t('auth.email') %></label>
             </div>
 
-            <!--
-              Neighbourhood secret question.
-              Only Baumgarten residents know the answer.
-              The question is shown as a label; the answer is validated server-side.
-              The expected answer is in .env (NEIGHBOURHOOD_SECRET), so it can be
-              changed at any time without code changes.
-            -->
+            <!-- Neighbourhood secret question -->
             <div class="mb-3">
               <label for="neighbourhood_secret" class="form-label">
                 <i class="bi bi-house-heart"></i> <%= t('auth.secret_question') %>
@@ -48,17 +91,7 @@
               <div class="form-text"><%= t('auth.secret_hint') %></div>
             </div>
 
-            <!--
-              Honeypot field — anti-bot measure.
-
-              This field is INVISIBLE to real users (hidden with CSS).
-              Bots that auto-fill all form fields will fill this in.
-              If it has a value when submitted, we know it's a bot.
-
-              Important: we use CSS to hide it (not type="hidden" or display:none)
-              because sophisticated bots detect those methods.
-              The field name "website" sounds like a real field to bots.
-            -->
+            <!-- Honeypot (hidden from humans, caught by bots) -->
             <div class="honeypot-field" aria-hidden="true">
               <label for="website">Website</label>
               <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
@@ -76,6 +109,7 @@
 
         </div>
       </div>
+
     </div>
   </div>
 </main>
