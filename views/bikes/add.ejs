@@ -6,6 +6,7 @@
       <h2 class="mb-4"><i class="bi bi-plus-circle"></i> <%= t('bikes.add_title') %></h2>
 
       <form method="POST" action="/bikes/add" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="card card-body mb-3">
           <h6 class="card-title"><i class="bi bi-bicycle"></i> <%= t('bikes.details') %></h6>
           <div class="mb-3">

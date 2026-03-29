@@ -82,6 +82,7 @@
               -->
               <% if (bike.payment_status !== 'paid' && bike.payment_status !== 'exempt') { %>
                 <form method="POST" action="/admin/payment/<%= bike.id %>" class="d-inline">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button type="submit" class="btn btn-sm btn-outline-success">
                     <i class="bi bi-check-circle"></i> <%= t('admin.mark_paid') %>
                   </button>

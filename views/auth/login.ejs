@@ -72,6 +72,7 @@
           </p>
 
           <form method="POST" action="/login">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
             <!-- Email -->
             <div class="form-floating mb-3">

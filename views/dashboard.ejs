@@ -54,6 +54,7 @@
                   </a>
                   <% if (bike.status === 'active') { %>
                     <form method="POST" action="/bikes/stolen/<%= bike.id %>" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-sm btn-outline-danger"
                               title="<%= t('bikes.report_stolen') %>"
                               onclick="return confirm('<%= t('dashboard.confirm_stolen') %>')">
@@ -62,6 +63,7 @@
                     </form>
                   <% } else if (bike.status === 'stolen') { %>
                     <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-sm btn-outline-success" title="<%= t('bikes.mark_recovered') %>">
                         <i class="bi bi-check-circle"></i>
                       </button>
