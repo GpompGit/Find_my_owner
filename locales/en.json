@@ -247,6 +247,11 @@
     "owner_privacy_notice": "Only you can see these exact locations. Data auto-deletes after 90 days.",
     "admin_notice": "Showing all scan locations with GPS data. Red = stolen, blue = active."
   },
+  "pwa": {
+    "install_title": "Install this app on your iPhone",
+    "install_step1": "Tap",
+    "install_step2": "then \"Add to Home Screen\""
+  },
   "legal": {
     "privacy": "Privacy Policy",
     "terms": "Terms of Use",

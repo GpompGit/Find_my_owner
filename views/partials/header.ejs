@@ -229,3 +229,55 @@
       <% }) %>
     <% } %>
   </div>
+
+  <!--
+    iOS "Add to Home Screen" banner.
+
+    Only shown when ALL of these conditions are true:
+    1. User is on an iPhone/iPad (iOS Safari)
+    2. App is NOT already running in standalone mode (already added)
+    3. User hasn't dismissed the banner before (localStorage flag)
+
+    Hidden on desktop by CSS (d-none d-block only on small screens won't work
+    here since we need JS detection). The script handles everything.
+  -->
+  <div id="ios-install-banner" class="container mt-2" style="display: none;">
+    <div class="alert alert-info alert-dismissible fade show py-2 mb-0" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-phone fs-4 me-2 text-primary"></i>
+        <div class="small">
+          <strong><%= t('pwa.install_title') %></strong><br>
+          <%= t('pwa.install_step1') %> <i class="bi bi-box-arrow-up"></i> <%= t('pwa.install_step2') %>
+        </div>
+      </div>
+      <button type="button" class="btn-close" id="ios-install-dismiss" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <script>
+    // Show the iOS install banner only on iPhone Safari, not in standalone mode,
+    // and only if the user hasn't dismissed it before.
+    (function () {
+      var banner = document.getElementById('ios-install-banner')
+      if (!banner) return
+
+      // Detect iOS Safari: must be on iPhone/iPad AND not in standalone mode
+      var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+      var isStandalone = window.navigator.standalone === true
+      var isDismissed = localStorage.getItem('ios-install-dismissed') === 'true'
+
+      // Only show on iOS Safari, not already installed, not dismissed
+      if (isIOS && !isStandalone && !isDismissed) {
+        banner.style.display = 'block'
+      }
+
+      // Dismiss handler — hide banner and remember the choice
+      var dismissBtn = document.getElementById('ios-install-dismiss')
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', function () {
+          banner.style.display = 'none'
+          localStorage.setItem('ios-install-dismissed', 'true')
+        })
+      }
+    })()
+  </script>
