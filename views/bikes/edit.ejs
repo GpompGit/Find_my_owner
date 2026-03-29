@@ -9,11 +9,16 @@
       <% if (bike.status === 'stolen') { %>
         <div class="alert alert-danger d-flex justify-content-between align-items-center">
           <span><i class="bi bi-exclamation-triangle-fill"></i> <%= t('bikes.status_stolen_banner') %></span>
-          <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
-            <button type="submit" class="btn btn-sm btn-outline-success">
-              <i class="bi bi-check-circle"></i> <%= t('bikes.mark_recovered') %>
-            </button>
-          </form>
+          <div class="d-flex gap-2">
+            <a href="/map/bike/<%= bike.id %>" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-geo-alt"></i> <%= t('map.view_map') %>
+            </a>
+            <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-check-circle"></i> <%= t('bikes.mark_recovered') %>
+              </button>
+            </form>
+          </div>
         </div>
       <% } else if (bike.status === 'active') { %>
         <div class="alert alert-success d-flex justify-content-between align-items-center">

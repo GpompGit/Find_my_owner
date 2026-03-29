@@ -5,6 +5,7 @@
     "dashboard": "My Bikes",
     "add_bike": "Add Bike",
     "admin": "Admin",
+    "map": "Map",
     "login": "Login",
     "register": "Register",
     "logout": "Logout"
@@ -179,6 +180,23 @@
     "device": "Device",
     "no_scans": "No scans recorded yet.",
     "showing_recent": "Showing the 200 most recent scans."
+  },
+  "map": {
+    "community_title": "Baumgarten Theft Map",
+    "community_subtitle": "Approximate locations where stolen bikes have been scanned in the neighbourhood.",
+    "owner_title": "Scan Locations",
+    "owner_subtitle": "Exact locations where your stolen bike was scanned.",
+    "admin_title": "Scan Map",
+    "view_map": "View Map",
+    "approximate_notice": "Locations are approximate (~200m) to protect privacy.",
+    "register_bike": "Register Your Bike",
+    "no_scans_yet": "No scan locations recorded yet.",
+    "latest_scan": "Latest scan",
+    "scanned_at": "Scanned",
+    "accuracy": "Accuracy",
+    "data_expires": "Data expires",
+    "owner_privacy_notice": "Only you can see these exact locations. Data auto-deletes after 90 days.",
+    "admin_notice": "Showing all scan locations with GPS data. Red = stolen, blue = active."
   },
   "legal": {
     "privacy": "Privacy Policy",
