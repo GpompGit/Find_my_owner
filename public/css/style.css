@@ -38,6 +38,32 @@
   height: auto;
 }
 
+/* ─── Label Preview (Admin Print Page) ───────────────────────────────────── */
+
+/*
+ * Preview of the Dymo 30332 square label (25 x 25 mm).
+ * On screen at 96 DPI: 25mm ≈ 95px. We show it slightly larger (120px)
+ * for easier viewing. A dotted border simulates the label edge.
+ */
+.label-preview {
+  width: 120px;
+  height: 120px;
+  border: 2px dotted #aaa;       /* Simulates label edge — not printed */
+  border-radius: 4px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+/* QR image inside the label preview — fills the square */
+.label-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;           /* Scale without cropping */
+}
+
 /* ─── Print Styles ───────────────────────────────────────────────────────── */
 
 /* @media print applies ONLY when the page is printed (Ctrl+P or window.print())
@@ -54,10 +80,27 @@
     box-shadow: none !important;
   }
 
-  /* Ensure QR codes print at full quality */
+  /* Print the label preview at actual 25x25mm size */
+  .label-preview {
+    width: 25mm;
+    height: 25mm;
+    border: none;               /* No dotted border on actual print */
+    padding: 0;
+    margin: 0;
+  }
+
+  /* QR fills the entire label area for maximum scan distance */
+  .label-qr-image {
+    width: 25mm;
+    height: 25mm;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Legacy QR display — keep for edit page QR preview */
   .qr-code-display {
-    max-width: 300px;
-    -webkit-print-color-adjust: exact;  /* Force color printing for QR codes */
+    max-width: 200px;
+    -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 }
