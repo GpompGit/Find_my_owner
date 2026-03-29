@@ -23,7 +23,9 @@
 #   * * * * * /volume1/docker/quartier-bike-id/scripts/docker-webhook-watcher.sh
 
 PROJECT_DIR="/volume1/docker/quartier-bike-id"
-TRIGGER_FILE="$PROJECT_DIR/uploads/.deploy-trigger"
+# Trigger file lives in uploads/qr/ which is a Docker volume
+# visible to both the container and the host.
+TRIGGER_FILE="$PROJECT_DIR/uploads/qr/.deploy-trigger"
 
 # If the trigger file exists, a deploy was requested
 if [ -f "$TRIGGER_FILE" ]; then

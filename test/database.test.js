@@ -101,11 +101,32 @@ const createTestBike = async (ownerId, overrides = {}) => {
 }
 
 /**
+ * Get a CSRF token and session cookie from a GET request.
+ * Needed for all POST requests since CSRF protection was added.
+ *
+ * @param {string} sessionCookie - Optional existing session cookie
+ * @returns {Object} { csrfToken, cookie }
+ */
+const getCsrfToken = async (sessionCookie) => {
+  const req = request(app).get('/login')
+  if (sessionCookie) req.set('Cookie', sessionCookie)
+  const res = await req
+
+  const match = res.text.match(/name="_csrf"\s+value="([^"]+)"/)
+  const csrfToken = match ? match[1] : ''
+  const cookies = res.headers['set-cookie']
+  const cookie = cookies
+    ? cookies.map(c => c.split(';')[0]).join('; ')
+    : sessionCookie || ''
+  return { csrfToken, cookie }
+}
+
+/**
  * Simulate a logged-in session by creating a token, verifying it,
- * and returning the session cookie for subsequent requests.
+ * and returning the session cookie + CSRF token for subsequent requests.
  *
  * @param {string} email
- * @returns {string} Session cookie string for use with supertest .set('Cookie', ...)
+ * @returns {Object} { cookie, csrfToken } for use with supertest
  */
 const loginAs = async (email) => {
   const token = await createMagicToken(email)
@@ -118,8 +139,11 @@ const loginAs = async (email) => {
   const cookies = res.headers['set-cookie']
   if (!cookies) throw new Error('No session cookie returned after login')
 
-  // Return the cookie string for use in subsequent requests
-  return cookies.map(c => c.split(';')[0]).join('; ')
+  const cookie = cookies.map(c => c.split(';')[0]).join('; ')
+
+  // Get a CSRF token using the authenticated session
+  const csrf = await getCsrfToken(cookie)
+  return { cookie: csrf.cookie || cookie, csrfToken: csrf.csrfToken }
 }
 
 /**
@@ -170,11 +194,14 @@ describe('DATABASE INTEGRATION TESTS', function () {
     afterEach(async () => await cleanDatabase())
 
     it('should send magic link and create token in database', async () => {
+      const csrf = await getCsrfToken()
       const res = await request(app)
         .post('/login')
+        .set('Cookie', csrf.cookie)
         .send({
           email: 'newuser@test.com',
-          neighbourhood_secret: 'Bolligenstrasse'
+          neighbourhood_secret: 'Bolligenstrasse',
+          _csrf: csrf.csrfToken
         })
 
       // Should show "check your email" page
@@ -298,12 +325,12 @@ describe('DATABASE INTEGRATION TESTS', function () {
     it('should complete registration with name and phone', async () => {
       const userId = await createTestUser('incomplete@test.com')
       const token = await createMagicToken('incomplete@test.com')
-      const cookie = await loginAs('incomplete@test.com')
+      const { cookie, csrfToken } = await loginAs('incomplete@test.com')
 
       const res = await request(app)
         .post('/register/complete')
         .set('Cookie', cookie)
-        .send({ name: 'Completed User', phone: '+41 79 123 45 67' })
+        .send({ name: 'Completed User', phone: '+41 79 123 45 67', _csrf: csrfToken })
         .redirects(0)
 
       if (res.status !== 302) {
@@ -326,13 +353,13 @@ describe('DATABASE INTEGRATION TESTS', function () {
   // ══════════════════════════════════════════════════════════════════════
 
   describe('Bicycle CRUD', () => {
-    let cookie
+    let cookie, csrfToken
     let userId
 
     before(async () => {
       await cleanDatabase()
       userId = await createTestUser('bikeowner@test.com', 'Bike Owner')
-      cookie = await loginAs('bikeowner@test.com')
+      ;({ cookie, csrfToken } = await loginAs('bikeowner@test.com'))
     })
 
     afterEach(async () => {
@@ -360,6 +387,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post('/bikes/add')
         .set('Cookie', cookie)
+        .field('_csrf', csrfToken)
         .field('brand', 'Trek')
         .field('color', 'Red')
         .field('description', 'My test bike')
@@ -384,6 +412,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post('/bikes/add')
         .set('Cookie', cookie)
+        .field('_csrf', csrfToken)
         .field('color', 'Blue')
         .redirects(0)
 
@@ -429,6 +458,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post(`/bikes/edit/${bike.id}`)
         .set('Cookie', cookie)
+        .field('_csrf', csrfToken)
         .field('brand', 'New Brand')
         .field('color', 'New Color')
         .field('description', 'Updated description')
@@ -448,6 +478,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post(`/bikes/stolen/${bike.id}`)
         .set('Cookie', cookie)
+        .send({ _csrf: csrfToken })
         .redirects(0)
 
       if (res.status !== 302) throw new Error(`Expected 302, got ${res.status}`)
@@ -462,6 +493,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post(`/bikes/recovered/${bike.id}`)
         .set('Cookie', cookie)
+        .send({ _csrf: csrfToken })
         .redirects(0)
 
       if (res.status !== 302) throw new Error(`Expected 302, got ${res.status}`)
@@ -483,6 +515,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post(`/bikes/delete/${bike.id}`)
         .set('Cookie', cookie)
+        .send({ _csrf: csrfToken })
         .redirects(0)
 
       if (res.status !== 302) throw new Error(`Expected 302, got ${res.status}`)
@@ -505,14 +538,18 @@ describe('DATABASE INTEGRATION TESTS', function () {
   // ══════════════════════════════════════════════════════════════════════
 
   describe('Ownership Enforcement', () => {
-    let cookieA, cookieB, userIdA, userIdB
+    let cookieA, cookieB, csrfTokenA, csrfTokenB, userIdA, userIdB
 
     before(async () => {
       await cleanDatabase()
       userIdA = await createTestUser('usera@test.com', 'User A')
       userIdB = await createTestUser('userb@test.com', 'User B')
-      cookieA = await loginAs('usera@test.com')
-      cookieB = await loginAs('userb@test.com')
+      const loginA = await loginAs('usera@test.com')
+      cookieA = loginA.cookie
+      csrfTokenA = loginA.csrfToken
+      const loginB = await loginAs('userb@test.com')
+      cookieB = loginB.cookie
+      csrfTokenB = loginB.csrfToken
     })
 
     after(async () => await cleanDatabase())
@@ -537,6 +574,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       const res = await request(app)
         .post(`/bikes/delete/${bikeA.id}`)
         .set('Cookie', cookieB)
+        .send({ _csrf: csrfTokenB })
         .redirects(0)
 
       if (res.status !== 302 && res.status !== 403) {
@@ -554,6 +592,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       await request(app)
         .post(`/bikes/stolen/${bikeA.id}`)
         .set('Cookie', cookieB)
+        .send({ _csrf: csrfTokenB })
         .redirects(0)
 
       // Verify status unchanged
@@ -652,12 +691,15 @@ describe('DATABASE INTEGRATION TESTS', function () {
     after(async () => await cleanDatabase())
 
     it('should save contact message to database', async () => {
+      const csrf = await getCsrfToken()
       const res = await request(app)
         .post(`/contact/${bike.id}`)
+        .set('Cookie', csrf.cookie)
         .send({
           finder_name: 'Helpful Finder',
           finder_phone: '+41 79 999 99 99',
-          message: 'I found your bike at the train station!'
+          message: 'I found your bike at the train station!',
+          _csrf: csrf.csrfToken
         })
 
       if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}`)
@@ -675,9 +717,11 @@ describe('DATABASE INTEGRATION TESTS', function () {
     })
 
     it('should save message without optional fields', async () => {
+      const csrf = await getCsrfToken()
       const res = await request(app)
         .post(`/contact/${bike.id}`)
-        .send({ message: 'Anonymous tip' })
+        .set('Cookie', csrf.cookie)
+        .send({ message: 'Anonymous tip', _csrf: csrf.csrfToken })
 
       if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}`)
 
@@ -690,9 +734,11 @@ describe('DATABASE INTEGRATION TESTS', function () {
     })
 
     it('should reject empty message', async () => {
+      const csrf = await getCsrfToken()
       const res = await request(app)
         .post(`/contact/${bike.id}`)
-        .send({ message: '' })
+        .set('Cookie', csrf.cookie)
+        .send({ message: '', _csrf: csrf.csrfToken })
 
       // Should redirect back with error (not save empty message)
       if (res.status !== 302) {
@@ -823,12 +869,12 @@ describe('DATABASE INTEGRATION TESTS', function () {
   // ══════════════════════════════════════════════════════════════════════
 
   describe('Garage Parking', () => {
-    let cookie, userId
+    let cookie, csrfToken, userId
 
     before(async () => {
       await cleanDatabase()
       userId = await createTestUser('garage@test.com', 'Garage User')
-      cookie = await loginAs('garage@test.com')
+      ;({ cookie, csrfToken } = await loginAs('garage@test.com'))
     })
 
     after(async () => await cleanDatabase())
@@ -837,6 +883,7 @@ describe('DATABASE INTEGRATION TESTS', function () {
       await request(app)
         .post('/bikes/add')
         .set('Cookie', cookie)
+        .field('_csrf', csrfToken)
         .field('brand', 'Garage Bike')
         .field('color', 'Silver')
         .field('garage_parking', '1')

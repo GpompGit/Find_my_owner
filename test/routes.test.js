@@ -438,7 +438,7 @@ describe('Deploy Webhook (CI/CD Pipeline)', () => {
 
   // Clean up trigger files after tests
   afterEach(() => {
-    const triggerFile = path.join(__dirname, '..', 'uploads', '.deploy-trigger')
+    const triggerFile = path.join(__dirname, '..', 'uploads', 'qr', '.deploy-trigger')
     try { fs.unlinkSync(triggerFile) } catch (e) { /* file may not exist */ }
   })
 
@@ -569,7 +569,7 @@ describe('Deploy Webhook (CI/CD Pipeline)', () => {
       // We test that when the trigger file IS created, it has valid JSON.
 
       // Manually simulate what the Docker-mode webhook does:
-      const triggerFile = path.join(__dirname, '..', 'uploads', '.deploy-trigger')
+      const triggerFile = path.join(__dirname, '..', 'uploads', 'qr', '.deploy-trigger')
       const triggerData = {
         timestamp: new Date().toISOString(),
         pusher: 'test-user',

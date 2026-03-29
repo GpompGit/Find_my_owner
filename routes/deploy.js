@@ -135,7 +135,9 @@ router.post('/webhook', express.json(), (req, res) => {
   // So we write a small file to a shared volume (uploads/).
   // A watcher script on the host detects it and runs the rebuild.
 
-  const triggerFile = path.join(__dirname, '..', 'uploads', '.deploy-trigger')
+  // In Docker, only uploads/qr/ and uploads/photos/ are mounted as volumes.
+  // We write the trigger to uploads/qr/ so the host watcher can see it.
+  const triggerFile = path.join(__dirname, '..', 'uploads', 'qr', '.deploy-trigger')
   const scriptPath = path.join(__dirname, '..', 'scripts', 'deploy.sh')
 
   console.log(`\n=== Auto-deploy triggered at ${new Date().toLocaleString('de-CH')} ===`)
