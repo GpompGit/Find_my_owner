@@ -1,1 +1,80 @@
-/* Quartier Bike ID — Stylesheet */
+/**
+ * style.css — Quartier Bike ID Custom Styles
+ *
+ * This file contains ONLY project-specific overrides.
+ * Do NOT duplicate Bootstrap utilities — use Bootstrap classes directly in HTML.
+ *
+ * What belongs here:
+ * - Brand colors and custom theming
+ * - QR code display sizing
+ * - Print-specific styles (@media print)
+ * - Stolen bike alert custom styling
+ * - Any layout that Bootstrap doesn't provide out of the box
+ */
+
+/* ─── Brand Colors ───────────────────────────────────────────────────────── */
+
+:root {
+  /* CSS custom properties (variables) — use these for consistent colors.
+     Reference in CSS with: var(--brand-primary)
+     Override Bootstrap's defaults where needed. */
+  --brand-primary: #0d6efd;    /* Bootstrap's blue — we keep it for consistency */
+  --brand-danger: #dc3545;     /* Bootstrap's red — used for stolen bike alerts */
+}
+
+/* ─── QR Code Display ────────────────────────────────────────────────────── */
+
+/* QR code images on the public scan page and admin print page */
+.qr-code-display {
+  max-width: 250px;
+  height: auto;
+  margin: 0 auto;           /* Center the QR code horizontally */
+  display: block;            /* Required for margin auto to work on images */
+}
+
+/* Smaller QR codes in table views (admin bike list) */
+.qr-code-thumbnail {
+  max-width: 60px;
+  height: auto;
+}
+
+/* ─── Print Styles ───────────────────────────────────────────────────────── */
+
+/* @media print applies ONLY when the page is printed (Ctrl+P or window.print())
+   Used by the admin print page for QR labels */
+@media print {
+  /* Hide navigation and footer when printing */
+  .navbar, footer, .no-print {
+    display: none !important;
+  }
+
+  /* Remove backgrounds and shadows — saves ink */
+  .card {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure QR codes print at full quality */
+  .qr-code-display {
+    max-width: 300px;
+    -webkit-print-color-adjust: exact;  /* Force color printing for QR codes */
+    print-color-adjust: exact;
+  }
+}
+
+/* ─── Stolen Bike Alert ──────────────────────────────────────────────────── */
+
+/* Custom styling for the stolen bike warning on the public scan page */
+.stolen-alert {
+  border-left: 5px solid var(--brand-danger);
+  background-color: #fff5f5;      /* Very light red background */
+}
+
+/* ─── Bike Photo ─────────────────────────────────────────────────────────── */
+
+/* Bike photo on the public scan page — constrain to card width */
+.bike-photo {
+  max-height: 300px;
+  object-fit: cover;        /* Crop the image to fill the area without distortion */
+  width: 100%;              /* Full card width */
+}
