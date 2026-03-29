@@ -36,6 +36,7 @@ const contactRoutes = require('./routes/contact')
 const locationRoutes = require('./routes/location')
 const adminRoutes = require('./routes/admin')
 const legalRoutes = require('./routes/legal')
+const deployRoutes = require('./routes/deploy')
 
 // ─── 4. Create the Express app ──────────────────────────────────────────────
 const app = express()
@@ -195,6 +196,7 @@ app.use('/', contactRoutes)          // /contact/:id (finder contact form)
 app.use('/api', locationRoutes)      // /api/log-location (GPS endpoint)
 app.use('/admin', adminRoutes)       // /admin, /admin/bikes, /admin/garage, etc.
 app.use('/', legalRoutes)            // /privacy, /terms, /imprint
+app.use('/deploy', deployRoutes)     // /deploy/webhook (GitHub auto-deploy)
 
 // ─── 8. 404 handler — no route matched ──────────────────────────────────────
 //
