@@ -250,7 +250,8 @@
   "pwa": {
     "install_title": "Installer cette app sur votre iPhone",
     "install_step1": "Appuyez sur",
-    "install_step2": "puis \"Sur l'ecran d'accueil\""
+    "install_step2": "puis \"Sur l'ecran d'accueil\"",
+    "open_in_safari": "Ouvrez cette page dans Safari pour installer l'app sur l'ecran d'accueil."
   },
   "legal": {
     "privacy": "Politique de confidentialite",

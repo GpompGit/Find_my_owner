@@ -241,7 +241,12 @@
     Hidden on desktop by CSS (d-none d-block only on small screens won't work
     here since we need JS detection). The script handles everything.
   -->
-  <div id="ios-install-banner" class="container mt-2" style="display: none;">
+  <!--
+    iOS install banner — two variants:
+    1. Safari: "Tap share → Add to Home Screen" (works)
+    2. Other iOS browsers: "Open in Safari to install" (Chrome/Firefox can't do PWA)
+  -->
+  <div id="ios-safari-banner" class="container mt-2" style="display: none;">
     <div class="alert alert-info alert-dismissible fade show py-2 mb-0" role="alert">
       <div class="d-flex align-items-center">
         <i class="bi bi-phone fs-4 me-2 text-primary"></i>
@@ -250,34 +255,63 @@
           <%= t('pwa.install_step1') %> <i class="bi bi-box-arrow-up"></i> <%= t('pwa.install_step2') %>
         </div>
       </div>
-      <button type="button" class="btn-close" id="ios-install-dismiss" aria-label="Close"></button>
+      <button type="button" class="btn-close" data-dismiss-id="ios-safari-banner" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <div id="ios-other-banner" class="container mt-2" style="display: none;">
+    <div class="alert alert-info alert-dismissible fade show py-2 mb-0" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-phone fs-4 me-2 text-primary"></i>
+        <div class="small">
+          <strong><%= t('pwa.install_title') %></strong><br>
+          <%= t('pwa.open_in_safari') %>
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-dismiss-id="ios-other-banner" aria-label="Close"></button>
     </div>
   </div>
 
   <script>
-    // Show the iOS install banner only on iPhone Safari, not in standalone mode,
-    // and only if the user hasn't dismissed it before.
+    /**
+     * iOS "Add to Home Screen" banner logic.
+     *
+     * On iPhone, ALL browsers use Safari's WebKit engine (Apple rule).
+     * But only Safari itself has the "Add to Home Screen" option.
+     * Chrome, Firefox, Brave on iPhone can't install PWAs.
+     *
+     * Detection:
+     * - iOS: user agent contains "iPhone" or "iPad"
+     * - Safari: does NOT contain "CriOS" (Chrome), "FxiOS" (Firefox),
+     *   "OPiOS" (Opera), "EdgiOS" (Edge) — these are non-Safari iOS browsers
+     * - Standalone: window.navigator.standalone === true (already installed)
+     */
     (function () {
-      var banner = document.getElementById('ios-install-banner')
-      if (!banner) return
-
-      // Detect iOS Safari: must be on iPhone/iPad AND not in standalone mode
-      var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
+      var ua = navigator.userAgent
+      var isIOS = /iPhone|iPad|iPod/.test(ua)
       var isStandalone = window.navigator.standalone === true
       var isDismissed = localStorage.getItem('ios-install-dismissed') === 'true'
 
-      // Only show on iOS Safari, not already installed, not dismissed
-      if (isIOS && !isStandalone && !isDismissed) {
-        banner.style.display = 'block'
+      if (!isIOS || isStandalone || isDismissed) return
+
+      // Detect if this is Safari (not Chrome/Firefox/Edge on iOS)
+      var isIOSSafari = !(/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua))
+
+      if (isIOSSafari) {
+        // Safari — show the "tap share" instructions
+        document.getElementById('ios-safari-banner').style.display = 'block'
+      } else {
+        // Chrome/Firefox on iOS — tell them to open in Safari
+        document.getElementById('ios-other-banner').style.display = 'block'
       }
 
-      // Dismiss handler — hide banner and remember the choice
-      var dismissBtn = document.getElementById('ios-install-dismiss')
-      if (dismissBtn) {
-        dismissBtn.addEventListener('click', function () {
-          banner.style.display = 'none'
+      // Dismiss handler for both banners
+      document.querySelectorAll('[data-dismiss-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var bannerId = this.getAttribute('data-dismiss-id')
+          document.getElementById(bannerId).style.display = 'none'
           localStorage.setItem('ios-install-dismissed', 'true')
         })
-      }
+      })
     })()
   </script>

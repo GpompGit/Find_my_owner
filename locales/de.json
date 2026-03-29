@@ -250,7 +250,8 @@
   "pwa": {
     "install_title": "App auf dem iPhone installieren",
     "install_step1": "Tippen Sie auf",
-    "install_step2": "dann \"Zum Home-Bildschirm\""
+    "install_step2": "dann \"Zum Home-Bildschirm\"",
+    "open_in_safari": "Öffnen Sie diese Seite in Safari, um die App auf dem Home-Bildschirm zu installieren."
   },
   "legal": {
     "privacy": "Datenschutz",

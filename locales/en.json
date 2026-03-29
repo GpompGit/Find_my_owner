@@ -250,7 +250,8 @@
   "pwa": {
     "install_title": "Install this app on your iPhone",
     "install_step1": "Tap",
-    "install_step2": "then \"Add to Home Screen\""
+    "install_step2": "then \"Add to Home Screen\"",
+    "open_in_safari": "Open this page in Safari to install the app on your Home Screen."
   },
   "legal": {
     "privacy": "Privacy Policy",
