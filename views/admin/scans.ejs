@@ -1,1 +1,97 @@
-<!-- Full scan history -->
+<%- include('../partials/header', { title: 'Scan History' }) %>
+
+<!--
+  Admin — Scan History
+
+  Shows all QR code scans across all bikes, most recent first.
+  For stolen bikes with GPS data, shows a Google Maps link.
+  Limited to 200 most recent scans for performance.
+-->
+<main class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+      <i class="bi bi-qr-code-scan"></i> Scan History
+      <span class="badge bg-secondary"><%= scans.length %></span>
+    </h2>
+    <a href="/admin" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Date</th>
+          <th>Bike</th>
+          <th>Status</th>
+          <th class="d-none d-md-table-cell">Location</th>
+          <th class="d-none d-lg-table-cell">Device</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% scans.forEach(scan => { %>
+          <tr class="<%= scan.status === 'stolen' ? 'table-warning' : '' %>">
+            <td>
+              <!--
+                Format the scan date in Swiss locale (dd.mm.yyyy hh:mm).
+                toLocaleString('de-CH') outputs dates in the format
+                commonly used in Switzerland.
+              -->
+              <%= new Date(scan.scanned_at).toLocaleString('de-CH') %>
+            </td>
+            <td><%= scan.brand %> <%= scan.color %></td>
+            <td>
+              <% if (scan.status === 'stolen') { %>
+                <span class="badge bg-danger">Stolen</span>
+              <% } else { %>
+                <span class="badge bg-success">Active</span>
+              <% } %>
+            </td>
+            <td class="d-none d-md-table-cell">
+              <!--
+                Show Google Maps link if GPS coordinates are available.
+                This only happens for stolen bikes where the finder shared location.
+              -->
+              <% if (scan.lat && scan.lng) { %>
+                <a href="https://maps.google.com/?q=<%= scan.lat %>,<%= scan.lng %>"
+                   target="_blank" rel="noopener noreferrer"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-geo-alt"></i>
+                  ~<%= Math.round(scan.accuracy || 0) %>m
+                </a>
+                <% if (scan.location_expires_at) { %>
+                  <br>
+                  <small class="text-muted">
+                    Expires: <%= new Date(scan.location_expires_at).toLocaleDateString('de-CH') %>
+                  </small>
+                <% } %>
+              <% } else { %>
+                <span class="text-muted">—</span>
+              <% } %>
+            </td>
+            <td class="d-none d-lg-table-cell">
+              <!--
+                User agent — truncated to keep the table readable.
+                Shows what device/browser was used to scan the QR code.
+              -->
+              <small class="text-muted">
+                <%= scan.user_agent ? scan.user_agent.substring(0, 50) + '...' : '—' %>
+              </small>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (scans.length === 0) { %>
+    <p class="text-center text-muted py-4">No scans recorded yet.</p>
+  <% } %>
+
+  <% if (scans.length >= 200) { %>
+    <p class="text-center text-muted small">Showing the 200 most recent scans.</p>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>
