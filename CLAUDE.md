@@ -70,7 +70,7 @@ quartier-bike-id/
 │   ├── public.js           # /bike/:uid — public scan page
 │   ├── contact.js          # /contact/:id — finder contact form
 │   ├── location.js         # /api/log-location — stolen bike GPS endpoint
-│   └── admin.js            # /admin/* — password protected
+│   └── admin.js            # /admin/* — admin-only (email-based access control)
 ├── middleware/
 │   ├── requireAuth.js      # Redirect to login if no session
 │   ├── requireOwner.js     # Validate bike belongs to logged-in user
@@ -794,7 +794,7 @@ npm install nodemailer
 npm install mysql2
 npm install ejs
 npm install dotenv
-npm install node-cron
+## Removed: node-cron (scheduling handled by PM2 cron or Docker cron)
 ```
 
 -----

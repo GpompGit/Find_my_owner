@@ -24,6 +24,7 @@
 const express = require('express')
 const crypto = require('crypto')           // Node built-in: cryptographic functions
 const { execFile } = require('child_process')  // Node built-in: run external scripts
+const fs = require('fs')                   // Node built-in: file system
 const path = require('path')
 
 const router = express.Router()
@@ -125,29 +126,57 @@ router.post('/webhook', express.json(), (req, res) => {
   // GitHub doesn't need to wait for the deploy to finish.
   res.json({ message: 'Deploy triggered', branch: 'main' })
 
-  // ── Run the deploy script ──
-  // execFile runs an external script as a child process.
-  // It's safer than exec() because it doesn't use a shell
-  // (no shell injection risk).
+  // ── Run the deploy ──
+  // Two modes:
+  // 1. Docker: write a trigger file → host watcher picks it up and rebuilds
+  // 2. Direct: run deploy.sh directly (npm install + pm2 restart)
+  //
+  // In Docker, the container can't run docker-compose on the host.
+  // So we write a small file to a shared volume (uploads/).
+  // A watcher script on the host detects it and runs the rebuild.
+
+  // In Docker, only uploads/qr/ and uploads/photos/ are mounted as volumes.
+  // We write the trigger to uploads/qr/ so the host watcher can see it.
+  const triggerFile = path.join(__dirname, '..', 'uploads', 'qr', '.deploy-trigger')
   const scriptPath = path.join(__dirname, '..', 'scripts', 'deploy.sh')
 
   console.log(`\n=== Auto-deploy triggered at ${new Date().toLocaleString('de-CH')} ===`)
   console.log(`  Branch: main`)
   console.log(`  Pusher: ${req.body.pusher ? req.body.pusher.name : 'unknown'}`)
-  console.log(`  Running: ${scriptPath}`)
 
-  execFile('bash', [scriptPath], {
-    cwd: path.join(__dirname, '..'),   // Run from the project root
-    timeout: 60000                      // 60-second timeout
-  }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Deploy script failed:', error.message)
-      if (stderr) console.error('stderr:', stderr)
-      return
+  // Check if we're running inside Docker (the /.dockerenv file exists in containers)
+  const isDocker = fs.existsSync('/.dockerenv')
+
+  if (isDocker) {
+    // ── Docker mode: write trigger file for host watcher ──
+    console.log('  Mode: Docker — writing deploy trigger file')
+    try {
+      fs.writeFileSync(triggerFile, JSON.stringify({
+        timestamp: new Date().toISOString(),
+        pusher: req.body.pusher ? req.body.pusher.name : 'unknown',
+        commits: req.body.commits ? req.body.commits.length : 0
+      }))
+      console.log('  Trigger file written — host watcher will rebuild')
+      console.log('=== Deploy trigger set ===\n')
+    } catch (err) {
+      console.error('  Failed to write trigger file:', err.message)
     }
-    console.log('Deploy output:', stdout)
-    console.log('=== Auto-deploy completed ===\n')
-  })
+  } else {
+    // ── Direct mode: run deploy.sh ──
+    console.log(`  Mode: Direct — running ${scriptPath}`)
+    execFile('bash', [scriptPath], {
+      cwd: path.join(__dirname, '..'),
+      timeout: 60000
+    }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Deploy script failed:', error.message)
+        if (stderr) console.error('stderr:', stderr)
+        return
+      }
+      console.log('Deploy output:', stdout)
+      console.log('=== Auto-deploy completed ===\n')
+    })
+  }
 })
 
 /**

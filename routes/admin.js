@@ -24,6 +24,7 @@ const express = require('express')
 const db = require('../db/connection')
 const requireAuth = require('../middleware/requireAuth')
 const requireAdmin = require('../middleware/requireAdmin')
+const escapeHtml = require('../utils/escapeHtml')
 const nodemailer = require('nodemailer')
 
 const router = express.Router()
@@ -295,12 +296,12 @@ router.post('/payment/:id', async (req, res) => {
         subject: `Payment received — ${bike.brand} ${bike.color}`,
         html: `
           <h2>Garage Payment Confirmed</h2>
-          <p>Dear ${bike.owner_name},</p>
+          <p>Dear ${escapeHtml(bike.owner_name)},</p>
           <p>
             Your annual garage parking contribution of
             <strong>CHF ${parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2)}</strong>
             has been received for your
-            <strong>${bike.color} ${bike.brand}</strong>.
+            <strong>${escapeHtml(bike.color)} ${escapeHtml(bike.brand)}</strong>.
           </p>
           <p><strong>Payment date:</strong> ${paidDate}</p>
           <p><strong>Next due:</strong> ${dueDate}</p>

@@ -5,19 +5,19 @@
 # Called by the GitHub webhook handler (routes/deploy.js) when code
 # is pushed to the main branch.
 #
-# What it does:
-# 1. Pull the latest code from GitHub
-# 2. Install any new npm dependencies
-# 3. Restart the application via PM2
+# Supports TWO deployment modes:
+# 1. Docker mode (recommended): rebuilds the container image and restarts
+# 2. Direct mode (legacy): npm install + pm2 restart
 #
-# This script runs as a child process of the Node.js app.
-# It inherits the working directory from the caller (project root).
+# The script auto-detects which mode to use:
+# - If docker-compose is available AND docker-compose.yml exists → Docker mode
+# - Otherwise → Direct mode (PM2)
 #
 # Exit codes:
 #   0 = success
 #   1 = git pull failed
-#   2 = npm install failed
-#   3 = pm2 restart failed
+#   2 = build/install failed
+#   3 = restart failed
 
 echo "Starting deploy..."
 echo "Working directory: $(pwd)"
@@ -36,33 +36,77 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# ── Step 2: Install dependencies ──
-# npm install checks package.json for any new or updated packages.
-# --production skips devDependencies (test tools, etc.) on the server.
-# If nothing changed in package.json, this finishes instantly.
-echo ""
-echo "Step 2: Installing dependencies..."
-npm install --production
+# ── Step 2 & 3: Build and restart (mode-dependent) ──
+# Check if we're running in Docker mode or Direct mode.
 
-if [ $? -ne 0 ]; then
-  echo "ERROR: npm install failed"
-  exit 2
+if command -v docker-compose &> /dev/null && [ -f "docker-compose.yml" ]; then
+  # ════════════════════════════════════════════════════════════
+  # DOCKER MODE
+  # ════════════════════════════════════════════════════════════
+  echo ""
+  echo "Detected: Docker mode"
+
+  # Rebuild the app container with the new code.
+  # --build forces a rebuild of the image (picks up code changes).
+  # -d runs in the background (detached).
+  # Only the 'app' service is rebuilt — the database stays running.
+  echo ""
+  echo "Step 2: Rebuilding app container..."
+  docker-compose up -d --build app
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: docker-compose build failed"
+    exit 2
+  fi
+
+  echo ""
+  echo "Step 3: Verifying container health..."
+  # Wait a few seconds for the container to start
+  sleep 5
+
+  # Check if the container is running
+  docker-compose ps app | grep -q "Up"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: App container is not running"
+    echo "Logs:"
+    docker-compose logs --tail 20 app
+    exit 3
+  fi
+
+  echo ""
+  echo "Deploy completed successfully! (Docker mode)"
+  echo "Container status:"
+  docker-compose ps
+
+else
+  # ════════════════════════════════════════════════════════════
+  # DIRECT MODE (PM2)
+  # ════════════════════════════════════════════════════════════
+  echo ""
+  echo "Detected: Direct mode (PM2)"
+
+  # Install dependencies
+  echo ""
+  echo "Step 2: Installing dependencies..."
+  npm install --production
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: npm install failed"
+    exit 2
+  fi
+
+  # Restart the application
+  echo ""
+  echo "Step 3: Restarting application..."
+  pm2 restart quartier-bike-id
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: pm2 restart failed"
+    exit 3
+  fi
+
+  echo ""
+  echo "Deploy completed successfully! (Direct mode)"
+  echo "App status:"
+  pm2 show quartier-bike-id --no-color 2>/dev/null | head -20
 fi
-
-# ── Step 3: Restart the application ──
-# PM2 restart gracefully stops the old process and starts a new one.
-# The app reloads with the new code.
-# Users experience at most a 1-2 second interruption.
-echo ""
-echo "Step 3: Restarting application..."
-pm2 restart quartier-bike-id
-
-if [ $? -ne 0 ]; then
-  echo "ERROR: pm2 restart failed"
-  exit 3
-fi
-
-echo ""
-echo "Deploy completed successfully!"
-echo "App status:"
-pm2 show quartier-bike-id --no-color 2>/dev/null | head -20

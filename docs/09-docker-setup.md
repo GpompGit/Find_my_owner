@@ -183,6 +183,42 @@ Add this line:
 
 This runs the cleanup job every night at 03:00 inside the running container.
 
+## Step 8b: Set Up Auto-Deploy Webhook (CI/CD)
+
+The GitHub webhook auto-deploy works with Docker too. The flow:
+
+```
+GitHub merge → Webhook → App container writes trigger file → Host watcher rebuilds
+```
+
+Since the app runs inside a container and can't run `docker-compose` on the host, we use a two-step approach:
+
+1. The webhook handler (inside the container) writes a `.deploy-trigger` file to the shared `uploads/` volume
+2. A watcher script on the host detects the file and runs `git pull + docker-compose up -d --build`
+
+### Set up the watcher on the NAS host:
+
+```bash
+# Add a cron job that checks every minute for deploy triggers
+crontab -e
+```
+
+Add this line:
+
+```
+* * * * * /volume1/docker/quartier-bike-id/scripts/docker-webhook-watcher.sh >> /var/log/quartier-deploy.log 2>&1
+```
+
+### Configure the GitHub webhook
+
+Follow the same steps as [docs/08-auto-deploy-webhook.md](08-auto-deploy-webhook.md):
+
+1. Add `DEPLOY_WEBHOOK_SECRET` to your `.env`
+2. Add the webhook in GitHub Settings → Webhooks
+3. Payload URL: `https://bikes.yourdomain.com/deploy/webhook`
+
+The webhook handler auto-detects Docker mode (checks for `/.dockerenv`) and writes the trigger file instead of running deploy.sh directly.
+
 ## Step 9: Auto-Start on NAS Boot
 
 Docker on Synology auto-starts containers with `restart: unless-stopped` policy (already configured in docker-compose.yml). Verify:
