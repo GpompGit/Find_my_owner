@@ -13,6 +13,15 @@ Step-by-step installation instructions for deploying the application on a Synolo
 | 5 | [05-dymo-printer.md](05-dymo-printer.md) | Configure the Dymo LabelWriter on the network |
 | 6 | [06-email-smtp.md](06-email-smtp.md) | Configure SMTP for email notifications |
 | 7 | [07-backup-and-maintenance.md](07-backup-and-maintenance.md) | Scheduled backups, log rotation, and PM2 persistence |
+| 8 | [08-auto-deploy-webhook.md](08-auto-deploy-webhook.md) | GitHub webhook for automatic deployment |
+| 9 | [09-docker-setup.md](09-docker-setup.md) | **Docker setup (recommended)** — one command to start everything |
+
+### Deployment Options
+
+- **Option A — Direct install** (guides 01-07): Install Node.js, MariaDB, PM2 individually on the NAS
+- **Option B — Docker** (guide 09): Run everything in containers with `docker-compose up -d`
+
+Docker is recommended — simpler setup, easier updates, and portable to AWS if needed.
 
 ## Target Infrastructure
 

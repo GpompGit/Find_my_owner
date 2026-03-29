@@ -1,0 +1,40 @@
+# .dockerignore — Files excluded from the Docker build context
+#
+# These files are NOT copied into the container during 'docker build'.
+# This keeps the image small and prevents leaking secrets.
+
+# Dependencies — reinstalled inside the container
+node_modules/
+
+# Environment files — secrets must NEVER be baked into an image
+.env
+.env.local
+
+# Git repository — not needed in production
+.git/
+.gitignore
+
+# Documentation — not needed at runtime
+docs/
+CLAUDE.md
+*.md
+!package.json
+
+# Claude Code configuration — development only
+.claude/
+
+# Tests — not needed in production
+test/
+
+# Development files
+preview.html
+
+# Uploads — mounted as volumes, not baked into the image
+uploads/photos/*
+uploads/qr/*
+!uploads/photos/.gitkeep
+!uploads/qr/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
