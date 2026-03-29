@@ -16,6 +16,7 @@ Run the entire application (Node.js + MariaDB) in Docker containers. One command
 
 - Synology DS713+ or DS214play with DSM 6.2+
 - Docker package installed from Package Center
+- Git Server package installed from Package Center (provides the `git` command via SSH)
 - SSH access to the NAS
 
 ## Step 1: Install Docker on the NAS
@@ -32,7 +33,7 @@ Run the entire application (Node.js + MariaDB) in Docker containers. One command
 Docker Compose may not be included by default on older DSM versions. Check and install:
 
 ```bash
-ssh admin@192.168.1.252
+ssh Guillermo@192.168.1.252
 sudo -i
 
 # Check if docker-compose is available
@@ -57,7 +58,7 @@ cd quartier-bike-id
 
 ```bash
 cp .env.example .env
-nano .env
+vi .env
 ```
 
 Fill in your values:
