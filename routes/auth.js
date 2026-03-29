@@ -18,6 +18,9 @@
  * - Tokens are single-use — marked as used after first verification
  * - Expired/used tokens are cleaned up nightly by cleanup.js
  * - Session regenerated on login to prevent session fixation
+ * - Neighbourhood secret question — only Baumgarten residents know the answer
+ * - Honeypot field — hidden input that bots fill in, humans don't see
+ * - Rate limiting — max 5 magic link requests per email per hour
  *
  * Routes:
  *   GET  /              — landing page (redirect to dashboard if logged in)
@@ -33,8 +36,17 @@ const express = require('express')
 const crypto = require('crypto')    // Node built-in: generate secure random tokens
 const db = require('../db/connection')
 const nodemailer = require('nodemailer')
+const createRateLimiter = require('../middleware/rateLimit')
 
 const router = express.Router()
+
+// ─── Rate limiter for magic link requests ───────────────────────────────────
+// Allows max 5 login requests per email per hour.
+// Prevents someone from flooding an email with magic link messages.
+const loginLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,  // 1 hour window
+  max: 5                      // 5 requests per email per hour
+})
 
 // ─── Email transporter for magic link emails ────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -93,13 +105,38 @@ router.get('/login', (req, res) => {
  * exists in our system or not. This prevents email enumeration attacks
  * (an attacker can't discover which emails are registered).
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
-    const { email } = req.body
+    const { email, neighbourhood_secret, website } = req.body
+
+    // ── Layer 1: Honeypot check ──
+    // The "website" field is hidden via CSS (not display:none, which some
+    // bots detect). Real users never see or fill it. If it has a value,
+    // a bot filled it in → silently reject by showing the success page
+    // (don't reveal that we caught the bot).
+    if (website) {
+      return res.render('auth/check-email', {
+        title: req.t('auth.check_email_title'),
+        email: email || ''
+      })
+    }
 
     // ── Validate email ──
     if (!email || !email.includes('@')) {
       req.flash('error', req.t('auth.email_required'))
+      return res.redirect('/login')
+    }
+
+    // ── Layer 2: Neighbourhood secret question ──
+    // Only Baumgarten residents know the answer.
+    // The answer is stored in .env (NEIGHBOURHOOD_SECRET) so it can be
+    // changed without code changes (e.g., at a building meeting).
+    // Comparison is case-insensitive and trimmed.
+    const expectedSecret = (process.env.NEIGHBOURHOOD_SECRET || '').trim().toLowerCase()
+    const providedSecret = (neighbourhood_secret || '').trim().toLowerCase()
+
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+      req.flash('error', req.t('auth.wrong_secret'))
       return res.redirect('/login')
     }
 

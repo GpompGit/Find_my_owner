@@ -105,6 +105,24 @@
   }
 }
 
+/* ─── Honeypot Field (Anti-Bot) ───────────────────────────────────────────── */
+
+/*
+ * The honeypot field is hidden from real users but visible to bots.
+ * We use position: absolute + overflow: hidden instead of display: none
+ * because some bots detect display:none and skip those fields.
+ * The field is moved off-screen so it's completely invisible.
+ */
+.honeypot-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
 /* ─── Stolen Bike Alert ──────────────────────────────────────────────────── */
 
 /* Custom styling for the stolen bike warning on the public scan page */
