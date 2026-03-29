@@ -12,6 +12,99 @@
  * - Any layout that Bootstrap doesn't provide out of the box
  */
 
+/* ─── iPhone / iOS Safari Optimisations ──────────────────────────────────── */
+
+/*
+ * iOS Safari zooms the page when an input has font-size < 16px.
+ * Bootstrap's .form-control uses 1rem (16px), so this is already fine.
+ * But form-select and some custom inputs may be smaller.
+ * This rule ensures all inputs are at least 16px to prevent auto-zoom.
+ */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/*
+ * Safe area insets — prevent content from hiding behind the iPhone notch
+ * (Dynamic Island on iPhone 14+) or the home indicator bar.
+ * env(safe-area-inset-*) is a CSS variable set by iOS Safari when
+ * viewport-fit=cover is used in the viewport meta tag.
+ */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* The navbar should extend behind the status bar on iPhones with notch */
+.navbar {
+  padding-top: calc(0.5rem + env(safe-area-inset-top));
+}
+
+/* Footer needs bottom safe area for iPhones with home indicator */
+footer {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+/*
+ * Minimum touch target size — Apple recommends 44x44px for tappable elements.
+ * Bootstrap's btn-sm is only 31px tall. We increase the minimum size
+ * for small buttons on mobile to prevent mis-taps.
+ */
+@media (max-width: 767px) {
+  .btn-sm {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Larger tap targets for table action buttons on mobile */
+  .d-flex.gap-1 .btn-sm {
+    padding: 8px 12px;
+  }
+
+  /* Dropdown items need bigger touch targets too */
+  .dropdown-item {
+    padding: 10px 16px;
+  }
+
+  /* Navigation links — bigger tap area on mobile */
+  .nav-link {
+    padding: 12px 16px !important;
+  }
+}
+
+/*
+ * Prevent iOS Safari from adding rounded corners and shadows to inputs.
+ * iOS adds its own styling that conflicts with Bootstrap.
+ */
+input, textarea, select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.375rem;  /* Match Bootstrap's default border-radius */
+}
+
+/*
+ * Smooth scrolling for the entire page.
+ * Also enables momentum-based scrolling on iOS (the "rubber band" effect).
+ */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Prevent pull-to-refresh on map pages (interferes with map panning).
+ * Applied via the map container's overflow property.
+ */
+#map {
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
 /* ─── Hero Section (Landing Page) ────────────────────────────────────────── */
 
 /*

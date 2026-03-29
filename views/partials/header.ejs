@@ -24,8 +24,27 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- Makes the page responsive on mobile devices (critical for QR scan pages) -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--
+    Makes the page responsive on mobile devices (critical for QR scan pages).
+    viewport-fit=cover enables content to fill the area behind the iPhone notch.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!--
+    iOS Safari / iPhone specific meta tags:
+    - theme-color: colours the status bar to match the navbar
+    - apple-mobile-web-app-capable: enables "Add to Home Screen" as a standalone app
+    - apple-mobile-web-app-status-bar-style: dark status bar to match dark navbar
+    - apple-touch-icon: the icon shown on the iPhone home screen
+  -->
+  <meta name="theme-color" content="#212529">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bike ID">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.svg">
+
+  <!-- PWA manifest — enables "Add to Home Screen" on Android too -->
+  <link rel="manifest" href="/manifest.json">
 
   <!-- Page title — uses the 'title' variable passed from each page, with a fallback -->
   <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Quartier Bike ID</title>
@@ -210,3 +229,89 @@
       <% }) %>
     <% } %>
   </div>
+
+  <!--
+    iOS "Add to Home Screen" banner.
+
+    Only shown when ALL of these conditions are true:
+    1. User is on an iPhone/iPad (iOS Safari)
+    2. App is NOT already running in standalone mode (already added)
+    3. User hasn't dismissed the banner before (localStorage flag)
+
+    Hidden on desktop by CSS (d-none d-block only on small screens won't work
+    here since we need JS detection). The script handles everything.
+  -->
+  <!--
+    iOS install banner — two variants:
+    1. Safari: "Tap share → Add to Home Screen" (works)
+    2. Other iOS browsers: "Open in Safari to install" (Chrome/Firefox can't do PWA)
+  -->
+  <div id="ios-safari-banner" class="container mt-2" style="display: none;">
+    <div class="alert alert-info alert-dismissible fade show py-2 mb-0" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-phone fs-4 me-2 text-primary"></i>
+        <div class="small">
+          <strong><%= t('pwa.install_title') %></strong><br>
+          <%= t('pwa.install_step1') %> <i class="bi bi-box-arrow-up"></i> <%= t('pwa.install_step2') %>
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-dismiss-id="ios-safari-banner" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <div id="ios-other-banner" class="container mt-2" style="display: none;">
+    <div class="alert alert-info alert-dismissible fade show py-2 mb-0" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-phone fs-4 me-2 text-primary"></i>
+        <div class="small">
+          <strong><%= t('pwa.install_title') %></strong><br>
+          <%= t('pwa.open_in_safari') %>
+        </div>
+      </div>
+      <button type="button" class="btn-close" data-dismiss-id="ios-other-banner" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * iOS "Add to Home Screen" banner logic.
+     *
+     * On iPhone, ALL browsers use Safari's WebKit engine (Apple rule).
+     * But only Safari itself has the "Add to Home Screen" option.
+     * Chrome, Firefox, Brave on iPhone can't install PWAs.
+     *
+     * Detection:
+     * - iOS: user agent contains "iPhone" or "iPad"
+     * - Safari: does NOT contain "CriOS" (Chrome), "FxiOS" (Firefox),
+     *   "OPiOS" (Opera), "EdgiOS" (Edge) — these are non-Safari iOS browsers
+     * - Standalone: window.navigator.standalone === true (already installed)
+     */
+    (function () {
+      var ua = navigator.userAgent
+      var isIOS = /iPhone|iPad|iPod/.test(ua)
+      var isStandalone = window.navigator.standalone === true
+      var isDismissed = localStorage.getItem('ios-install-dismissed') === 'true'
+
+      if (!isIOS || isStandalone || isDismissed) return
+
+      // Detect if this is Safari (not Chrome/Firefox/Edge on iOS)
+      var isIOSSafari = !(/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua))
+
+      if (isIOSSafari) {
+        // Safari — show the "tap share" instructions
+        document.getElementById('ios-safari-banner').style.display = 'block'
+      } else {
+        // Chrome/Firefox on iOS — tell them to open in Safari
+        document.getElementById('ios-other-banner').style.display = 'block'
+      }
+
+      // Dismiss handler for both banners
+      document.querySelectorAll('[data-dismiss-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var bannerId = this.getAttribute('data-dismiss-id')
+          document.getElementById(bannerId).style.display = 'none'
+          localStorage.setItem('ios-install-dismissed', 'true')
+        })
+      })
+    })()
+  </script>
