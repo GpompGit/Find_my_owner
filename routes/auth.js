@@ -121,8 +121,11 @@ router.post('/login', loginLimiter, async (req, res) => {
       })
     }
 
-    // ── Validate email ──
-    if (!email || !email.includes('@')) {
+    // ── Validate email format ──
+    // Simple regex that checks: something@something.something
+    // More permissive than RFC 5322 but catches obvious typos.
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || !emailRegex.test(email)) {
       req.flash('error', req.t('auth.email_required'))
       return res.redirect('/login')
     }
@@ -234,28 +237,33 @@ router.get('/auth/verify/:token', async (req, res) => {
       return res.render('auth/link-invalid', { title: req.t('auth.link_invalid_title') })
     }
 
-    // ── Look up the token ──
-    // Must exist, not be expired, and not already used.
-    const [rows] = await db.query(
-      'SELECT id, email FROM magic_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+    // ── Look up and claim the token atomically ──
+    // We use UPDATE ... SET used = TRUE with a WHERE used = FALSE condition.
+    // This is atomic — if two requests hit simultaneously, only one will
+    // succeed (affectedRows = 1), the other will get affectedRows = 0.
+    // This prevents the double-click race condition.
+    const [updateResult] = await db.query(
+      'UPDATE magic_tokens SET used = TRUE WHERE token = ? AND expires_at > NOW() AND used = FALSE',
       [token]
     )
 
-    if (rows.length === 0) {
-      // Token is invalid, expired, or already used
+    if (updateResult.affectedRows === 0) {
+      // Token is invalid, expired, or already claimed by another request
       return res.render('auth/link-expired', { title: req.t('auth.link_expired_title') })
     }
 
-    const magicToken = rows[0]
+    // ── Get the email from the now-claimed token ──
+    const [tokenRows] = await db.query(
+      'SELECT email FROM magic_tokens WHERE token = ?',
+      [token]
+    )
 
-    // ── Mark token as used (single-use) ──
-    // This prevents the same link from being clicked again.
-    await db.query('UPDATE magic_tokens SET used = TRUE WHERE id = ?', [magicToken.id])
+    const tokenEmail = tokenRows[0].email
 
     // ── Find the user by email ──
     const [users] = await db.query(
       'SELECT id, email, name FROM users WHERE email = ?',
-      [magicToken.email]
+      [tokenEmail]
     )
 
     let userId
@@ -271,7 +279,7 @@ router.get('/auth/verify/:token', async (req, res) => {
       // Name and phone will be collected at /register/complete
       const [result] = await db.query(
         'INSERT INTO users (email) VALUES (?)',
-        [magicToken.email]
+        [tokenEmail]
       )
       userId = result.insertId
       userName = null
@@ -289,7 +297,7 @@ router.get('/auth/verify/:token', async (req, res) => {
       // ── Store user data in session ──
       req.session.userId = userId
       req.session.userName = userName
-      req.session.isAdmin = (magicToken.email === process.env.ADMIN_EMAIL)
+      req.session.isAdmin = (tokenEmail.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase())
 
       // ── Save session and redirect ──
       req.session.save((err) => {

@@ -20,8 +20,17 @@
 const express = require('express')
 const db = require('../db/connection')
 const nodemailer = require('nodemailer')
+const escapeHtml = require('../utils/escapeHtml')
+const createRateLimiter = require('../middleware/rateLimit')
 
 const router = express.Router()
+
+// Rate limit GPS submissions — max 20 per IP per hour
+const locationLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyFn: (req) => req.ip || 'unknown'
+})
 
 /**
  * Email transporter — same config as contact.js.
@@ -54,18 +63,23 @@ const transporter = nodemailer.createTransport({
  *   403 { error: "..." }     — bike is not stolen (won't store location)
  *   500 { error: "..." }     — server error
  */
-router.post('/log-location', async (req, res) => {
+router.post('/log-location', locationLimiter, async (req, res) => {
   try {
     const { uid, lat, lng, accuracy } = req.body
 
-    // ── Validate required fields ──
-    if (!uid || lat === undefined || lng === undefined) {
-      return res.status(400).json({ error: 'Missing required fields: uid, lat, lng' })
+    // ── Validate required fields and types ──
+    // Check presence AND that lat/lng are actual numbers (not strings or NaN).
+    // parseFloat handles string-to-number conversion if the client sends strings.
+    const parsedLat = parseFloat(lat)
+    const parsedLng = parseFloat(lng)
+
+    if (!uid || isNaN(parsedLat) || isNaN(parsedLng)) {
+      return res.status(400).json({ error: 'Missing or invalid fields: uid, lat, lng' })
     }
 
     // ── Validate coordinate ranges ──
     // Latitude: -90 to 90, Longitude: -180 to 180
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    if (parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180) {
       return res.status(400).json({ error: 'Invalid coordinates' })
     }
 
@@ -108,7 +122,7 @@ router.post('/log-location', async (req, res) => {
        WHERE bicycle_id = ?
        ORDER BY scanned_at DESC
        LIMIT 1`,
-      [lat, lng, accuracy || null, expiresAt, bike.id]
+      [parsedLat, parsedLng, accuracy || null, expiresAt, bike.id]
     )
 
     // ── Send alert email to the bike owner ──
@@ -116,7 +130,7 @@ router.post('/log-location', async (req, res) => {
     // and where it was last seen.
     try {
       // Build a Google Maps link for easy viewing
-      const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`
+      const mapsUrl = `https://maps.google.com/?q=${parsedLat},${parsedLng}`
 
       await transporter.sendMail({
         from: `"Quartier Bike ID" <${process.env.SMTP_USER}>`,
@@ -125,7 +139,7 @@ router.post('/log-location', async (req, res) => {
         html: `
           <h2>Your stolen bicycle was scanned</h2>
           <p><strong>Time:</strong> ${new Date().toLocaleString('de-CH')}</p>
-          <p><strong>Bike:</strong> ${bike.color} ${bike.brand}</p>
+          <p><strong>Bike:</strong> ${escapeHtml(bike.color)} ${escapeHtml(bike.brand)}</p>
           <p>
             <a href="${mapsUrl}">View location on Google Maps</a>
             (accuracy: ~${Math.round(accuracy || 0)}m)
@@ -146,7 +160,7 @@ router.post('/log-location', async (req, res) => {
     // ── Also notify the admin ──
     try {
       if (process.env.ADMIN_EMAIL) {
-        const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`
+        const mapsUrl = `https://maps.google.com/?q=${parsedLat},${parsedLng}`
 
         await transporter.sendMail({
           from: `"Quartier Bike ID" <${process.env.SMTP_USER}>`,
@@ -154,8 +168,8 @@ router.post('/log-location', async (req, res) => {
           subject: `[ADMIN] Stolen bike scanned: ${bike.brand} ${bike.color}`,
           html: `
             <h2>Stolen bike scan with GPS</h2>
-            <p><strong>Bike:</strong> ${bike.color} ${bike.brand}</p>
-            <p><strong>Owner:</strong> ${bike.owner_name}</p>
+            <p><strong>Bike:</strong> ${escapeHtml(bike.color)} ${escapeHtml(bike.brand)}</p>
+            <p><strong>Owner:</strong> ${escapeHtml(bike.owner_name)}</p>
             <p><a href="${mapsUrl}">View on Google Maps</a></p>
           `
         })
