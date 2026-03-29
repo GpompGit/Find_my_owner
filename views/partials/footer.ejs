@@ -15,10 +15,21 @@
   - Bootstrap JS is needed for: navbar toggler, alert dismiss, modals, dropdowns
 -->
 
-  <!-- Page footer -->
+  <!-- Page footer with legal links -->
   <footer class="container mt-5 mb-3">
     <hr>
+    <!--
+      Legal page links — required for compliance.
+      Displayed on every page via this shared partial.
+    -->
     <p class="text-center text-muted small">
+      <a href="/privacy" class="text-muted text-decoration-none">Privacy Policy</a>
+      &middot;
+      <a href="/terms" class="text-muted text-decoration-none">Terms of Use</a>
+      &middot;
+      <a href="/imprint" class="text-muted text-decoration-none">Imprint</a>
+    </p>
+    <p class="text-center text-muted small mb-0">
       &copy; <%= new Date().getFullYear() %> Quartier Bike ID
       &middot; Community bicycle registration
     </p>

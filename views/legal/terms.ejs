@@ -1,0 +1,201 @@
+<%- include('../partials/header', { title: 'Terms of Use' }) %>
+
+<!--
+  Terms of Use
+
+  Defines the rules and conditions for using the Quartier Bike ID service.
+  This is a community project — terms are kept simple and fair.
+-->
+<main class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+      <h1 class="mb-4">Terms of Use</h1>
+      <p class="text-muted">Last updated: <%= new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+
+      <!-- ── 1. About the service ── -->
+      <h2 class="h4 mt-4">1. About This Service</h2>
+      <p>
+        Quartier Bike ID is a <strong>free, non-commercial community project</strong>
+        that helps neighbours register their bicycles with QR code labels.
+        The service is operated by Guillermo Pomphile for the benefit of the
+        local neighbourhood.
+      </p>
+      <p>
+        By creating an account and using this service, you agree to these terms.
+      </p>
+
+      <!-- ── 2. Account registration ── -->
+      <h2 class="h4 mt-4">2. Account Registration</h2>
+      <ul>
+        <li>You must provide a valid email address to create an account.</li>
+        <li>You are responsible for keeping your login credentials secure.</li>
+        <li>You may only register bicycles that you own.</li>
+        <li>One account per person — do not create multiple accounts.</li>
+        <li>You can delete your account at any time.</li>
+      </ul>
+
+      <!-- ── 3. Bicycle registration ── -->
+      <h2 class="h4 mt-4">3. Bicycle Registration</h2>
+      <ul>
+        <li>
+          You may register as many bicycles as you own under your account.
+        </li>
+        <li>
+          The information you provide (brand, colour, photo) should be accurate
+          to help identify your bicycle.
+        </li>
+        <li>
+          Each bicycle receives a unique QR code. You are responsible for
+          attaching the QR label to your bike.
+        </li>
+        <li>
+          Do not upload inappropriate, offensive, or copyrighted images.
+        </li>
+      </ul>
+
+      <!-- ── 4. Public scan page ── -->
+      <h2 class="h4 mt-4">4. Public Scan Page</h2>
+      <p>
+        When someone scans your bike's QR code, they will see:
+      </p>
+      <ul>
+        <li>Your <strong>first name only</strong> (never your full name, email, or phone)</li>
+        <li>Your bike's brand, colour, and description</li>
+        <li>Your bike's photo (if uploaded)</li>
+        <li>A contact form to send you a message</li>
+      </ul>
+      <p>
+        By registering a bike, you consent to this information being publicly
+        visible to anyone who scans the QR code.
+      </p>
+
+      <!-- ── 5. Stolen bike reporting ── -->
+      <h2 class="h4 mt-4">5. Stolen Bike Reporting</h2>
+      <ul>
+        <li>
+          You may mark your bike as "stolen" if it has been stolen.
+          <strong>Do not abuse this feature</strong> — false reports undermine the system.
+        </li>
+        <li>
+          When a stolen bike is scanned, the finder may voluntarily share their
+          GPS location with you. This is to help you locate your bike — not to
+          identify, track, or confront the finder.
+        </li>
+        <li>
+          <strong>Always contact the police</strong> to report a stolen bike.
+          This service is an aid, not a replacement for law enforcement.
+        </li>
+        <li>
+          Never attempt to recover a stolen bike on your own in a way that
+          could put you or others at risk.
+        </li>
+      </ul>
+
+      <!-- ── 6. Garage parking ── -->
+      <h2 class="h4 mt-4">6. Garage Parking</h2>
+      <ul>
+        <li>
+          The garage parking contribution of <strong>CHF 40.00 per year per bike</strong>
+          is voluntary and supports the maintenance of the shared garage.
+        </li>
+        <li>
+          Payment is made via TWINT using the QR code provided with your bike label.
+        </li>
+        <li>
+          The system tracks payment status for administrative purposes only.
+          No payment or banking data is stored in the system.
+        </li>
+        <li>
+          You may opt out of garage parking at any time by editing your bike settings.
+        </li>
+      </ul>
+
+      <!-- ── 7. Contact form ── -->
+      <h2 class="h4 mt-4">7. Contact Form</h2>
+      <ul>
+        <li>
+          The contact form on the scan page allows anyone to send a message
+          to the bike owner. Messages should be relevant to the bicycle
+          (e.g., "I found your bike", "Your bike has a flat tyre").
+        </li>
+        <li>
+          Do not use the contact form for spam, harassment, or commercial purposes.
+        </li>
+        <li>
+          The operator reserves the right to delete abusive messages.
+        </li>
+      </ul>
+
+      <!-- ── 8. Liability ── -->
+      <h2 class="h4 mt-4">8. Limitation of Liability</h2>
+      <p>
+        This service is provided <strong>"as is" without warranty</strong>.
+        The operator:
+      </p>
+      <ul>
+        <li>
+          Does not guarantee the service will be available at all times.
+          The server runs on home infrastructure and may experience downtime.
+        </li>
+        <li>
+          Is not responsible for any loss, damage, or theft of bicycles.
+          The service aids identification but cannot prevent theft.
+        </li>
+        <li>
+          Is not responsible for the accuracy of GPS location data shared
+          by finders, or for any actions taken based on that data.
+        </li>
+        <li>
+          Is not responsible for the content of messages sent through the
+          contact form.
+        </li>
+        <li>
+          Reserves the right to discontinue the service at any time, with
+          reasonable notice to registered users.
+        </li>
+      </ul>
+
+      <!-- ── 9. Acceptable use ── -->
+      <h2 class="h4 mt-4">9. Acceptable Use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Register bicycles you do not own</li>
+        <li>File false stolen reports</li>
+        <li>Attempt to access other users' accounts or data</li>
+        <li>Use the service for any illegal purpose</li>
+        <li>Attempt to disrupt or overload the service</li>
+        <li>Scrape, crawl, or automated access the service</li>
+      </ul>
+      <p>
+        The operator may suspend or delete accounts that violate these terms.
+      </p>
+
+      <!-- ── 10. Changes ── -->
+      <h2 class="h4 mt-4">10. Changes to These Terms</h2>
+      <p>
+        These terms may be updated occasionally. Continued use of the service
+        after changes constitutes acceptance. For significant changes,
+        registered users will be notified by email.
+      </p>
+
+      <!-- ── 11. Governing law ── -->
+      <h2 class="h4 mt-4">11. Governing Law</h2>
+      <p>
+        These terms are governed by <strong>Swiss law</strong>.
+        Any disputes shall be resolved in the courts of the canton
+        where the operator resides.
+      </p>
+
+      <!-- ── 12. Contact ── -->
+      <h2 class="h4 mt-4">12. Contact</h2>
+      <p>
+        For questions about these terms, see the <a href="/imprint">Imprint</a>
+        page for contact information.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

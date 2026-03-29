@@ -1,0 +1,86 @@
+<%- include('../partials/header', { title: 'Imprint' }) %>
+
+<!--
+  Imprint (Impressum)
+
+  Required by Swiss law for any website that provides a service.
+  Identifies who operates the service and how to contact them.
+
+  Note: The operator should fill in the actual address and contact
+  details before going live. Placeholder values are marked with [brackets].
+-->
+<main class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+      <h1 class="mb-4">Imprint</h1>
+
+      <!-- ── Operator ── -->
+      <h2 class="h4 mt-4">Service Operator</h2>
+      <address>
+        <strong>Guillermo Pomphile</strong><br>
+        [Street Address]<br>
+        [Postal Code] [City]<br>
+        Switzerland
+      </address>
+
+      <!-- ── Contact ── -->
+      <h2 class="h4 mt-4">Contact</h2>
+      <p>
+        <i class="bi bi-envelope"></i>
+        Email: <a href="mailto:[your-email@example.com]">[your-email@example.com]</a>
+      </p>
+      <p class="text-muted small">
+        Please use email for all enquiries regarding data protection,
+        account deletion requests, or questions about the service.
+      </p>
+
+      <!-- ── Nature of the service ── -->
+      <h2 class="h4 mt-4">About This Service</h2>
+      <p>
+        Quartier Bike ID is a <strong>private, non-commercial community project</strong>
+        operated voluntarily for the neighbourhood. It is not a registered business
+        and does not generate revenue.
+      </p>
+      <p>
+        The garage parking contribution (CHF 40.00/year) is collected on behalf of
+        the building community and is not income of the operator.
+      </p>
+
+      <!-- ── Technical details ── -->
+      <h2 class="h4 mt-4">Technical Information</h2>
+      <ul>
+        <li><strong>Hosting:</strong> Self-hosted on a private Synology NAS in Switzerland</li>
+        <li><strong>Public access:</strong> Via Cloudflare Tunnel (HTTPS encryption)</li>
+        <li><strong>Domain:</strong> [bikes.yourdomain.com]</li>
+      </ul>
+
+      <!-- ── Data protection ── -->
+      <h2 class="h4 mt-4">Data Protection</h2>
+      <p>
+        For information on how your personal data is processed, please see our
+        <a href="/privacy">Privacy Policy</a>.
+      </p>
+      <p>
+        For data protection enquiries or to exercise your rights under the
+        Swiss Federal Act on Data Protection (nDSG), please contact the
+        operator using the email address above.
+      </p>
+
+      <!-- ── Disclaimer ── -->
+      <h2 class="h4 mt-4">Disclaimer</h2>
+      <p>
+        The content of this website has been prepared with care. However, the
+        operator assumes no liability for the accuracy, completeness, or
+        timeliness of the information provided.
+      </p>
+      <p>
+        This service is provided free of charge and without warranty.
+        See the <a href="/terms">Terms of Use</a> for details.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,251 @@
+<%- include('../partials/header', { title: 'Privacy Policy' }) %>
+
+<!--
+  Privacy Policy
+
+  This page fulfils the legal requirement under:
+  - Swiss Federal Act on Data Protection (nDSG / revDSG), effective 1 Sept 2023
+  - EU General Data Protection Regulation (GDPR), where applicable
+
+  Key principle: be transparent about what data is collected, why,
+  and how long it's kept. Use plain language — not legal jargon.
+-->
+<main class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+      <h1 class="mb-4">Privacy Policy</h1>
+      <p class="text-muted">Last updated: <%= new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+
+      <!-- ── 1. Who we are ── -->
+      <h2 class="h4 mt-4">1. Responsible Party</h2>
+      <p>
+        This service is operated by <strong>Guillermo Pomphile</strong> as a private,
+        non-commercial community project for the neighbourhood.
+        See the <a href="/imprint">Imprint</a> for contact details.
+      </p>
+
+      <!-- ── 2. What data we collect ── -->
+      <h2 class="h4 mt-4">2. Data We Collect</h2>
+
+      <h3 class="h5 mt-3">2.1 Account Registration</h3>
+      <p>When you create an account, we collect:</p>
+      <ul>
+        <li><strong>Name</strong> — to identify you as a bike owner</li>
+        <li><strong>Email address</strong> — for login and notifications</li>
+        <li><strong>Phone number</strong> (optional) — for contact purposes</li>
+        <li><strong>Password</strong> — stored as a one-way hash (bcrypt), never in plain text</li>
+      </ul>
+
+      <h3 class="h5 mt-3">2.2 Bicycle Registration</h3>
+      <p>When you register a bicycle, we store:</p>
+      <ul>
+        <li>Brand, colour, and description of the bike</li>
+        <li>A photo of the bike (optional)</li>
+        <li>Whether the bike uses garage parking</li>
+        <li>A unique QR code identifier (UUID)</li>
+      </ul>
+
+      <h3 class="h5 mt-3">2.3 QR Code Scans</h3>
+      <p>When someone scans a bike's QR code, we log:</p>
+      <ul>
+        <li>Date and time of the scan</li>
+        <li>Device type (browser user agent string)</li>
+      </ul>
+      <p>
+        <strong>We do not store IP addresses.</strong>
+      </p>
+
+      <h3 class="h5 mt-3">2.4 GPS Location (Stolen Bikes Only)</h3>
+      <p>
+        If a bicycle has been reported stolen by its owner, the scan page
+        asks the finder for their GPS location. This is <strong>entirely voluntary</strong>:
+      </p>
+      <ul>
+        <li>Location is <strong>never</strong> requested for active or inactive bikes</li>
+        <li>The finder must actively click "Share my location" — it is never auto-requested</li>
+        <li>A "Continue without" option is always available</li>
+        <li>GPS data is automatically deleted after <strong>90 days</strong></li>
+      </ul>
+
+      <h3 class="h5 mt-3">2.5 Contact Messages</h3>
+      <p>
+        When a finder sends a message through the contact form, we store:
+      </p>
+      <ul>
+        <li>The message text</li>
+        <li>Finder's name (optional)</li>
+        <li>Finder's phone number (optional)</li>
+      </ul>
+
+      <h3 class="h5 mt-3">2.6 Cookies</h3>
+      <p>
+        This site uses a single <strong>session cookie</strong> (<code>connect.sid</code>)
+        that is strictly necessary for the login system to function. It contains a
+        random session identifier — no personal data, no tracking.
+      </p>
+      <ul>
+        <li>Type: strictly necessary (exempt from consent under ePrivacy Directive)</li>
+        <li>Duration: 7 days or until you log out</li>
+        <li>Third-party cookies: none</li>
+        <li>Analytics or tracking: none</li>
+      </ul>
+
+      <!-- ── 3. Why we collect data ── -->
+      <h2 class="h4 mt-4">3. Purpose of Data Processing</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Purpose</th>
+            <th>Legal Basis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Name, email, password</td>
+            <td>Account creation and authentication</td>
+            <td>Contract performance</td>
+          </tr>
+          <tr>
+            <td>Bike details and photo</td>
+            <td>Bicycle identification via QR code</td>
+            <td>Contract performance</td>
+          </tr>
+          <tr>
+            <td>Scan logs (date, device)</td>
+            <td>Usage statistics for bike owners</td>
+            <td>Legitimate interest</td>
+          </tr>
+          <tr>
+            <td>GPS location (stolen bikes)</td>
+            <td>Help recover stolen bicycles</td>
+            <td>Explicit consent</td>
+          </tr>
+          <tr>
+            <td>Contact messages</td>
+            <td>Enable communication between finder and owner</td>
+            <td>Legitimate interest</td>
+          </tr>
+          <tr>
+            <td>Session cookie</td>
+            <td>Keep you logged in</td>
+            <td>Strictly necessary</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ── 4. Data sharing ── -->
+      <h2 class="h4 mt-4">4. Data Sharing</h2>
+      <p>Your data is <strong>never sold or shared with third parties</strong>.</p>
+      <ul>
+        <li>
+          The public scan page shows <strong>only your first name</strong> — never
+          your full name, email, phone, or any other personal information.
+        </li>
+        <li>
+          Contact messages from finders are delivered only to the bike owner.
+        </li>
+        <li>
+          GPS location data from stolen bike scans is shared only with the bike owner
+          and the system administrator.
+        </li>
+      </ul>
+
+      <!-- ── 5. Data storage ── -->
+      <h2 class="h4 mt-4">5. Where Data Is Stored</h2>
+      <p>
+        All data is stored on a <strong>private server (Synology NAS) located in
+        Switzerland</strong>. Data never leaves Switzerland. There are no cloud
+        services or third-party hosting providers involved.
+      </p>
+      <p>
+        The website is accessible via <strong>Cloudflare Tunnel</strong>, which
+        provides HTTPS encryption. Cloudflare does not store or have access to
+        the application data.
+      </p>
+
+      <!-- ── 6. Retention ── -->
+      <h2 class="h4 mt-4">6. Data Retention</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Retention Period</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Account data</td>
+            <td>Until you delete your account</td>
+          </tr>
+          <tr>
+            <td>Bicycle records</td>
+            <td>Until you delete the bike or your account</td>
+          </tr>
+          <tr>
+            <td>GPS location data</td>
+            <td><strong>90 days</strong> (automatically deleted)</td>
+          </tr>
+          <tr>
+            <td>Scan logs</td>
+            <td>12 months</td>
+          </tr>
+          <tr>
+            <td>Contact messages</td>
+            <td>Until the bike or account is deleted</td>
+          </tr>
+          <tr>
+            <td>Session cookie</td>
+            <td>7 days or until logout</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ── 7. Your rights ── -->
+      <h2 class="h4 mt-4">7. Your Rights</h2>
+      <p>Under Swiss data protection law (nDSG) and the GDPR, you have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — request a copy of all data we hold about you</li>
+        <li><strong>Rectification</strong> — correct inaccurate data (via your account settings)</li>
+        <li><strong>Deletion</strong> — delete your account and all associated data at any time</li>
+        <li><strong>Data portability</strong> — receive your data in a machine-readable format</li>
+        <li><strong>Objection</strong> — object to data processing based on legitimate interest</li>
+        <li><strong>Withdrawal of consent</strong> — withdraw GPS consent at any time (location sharing is always voluntary)</li>
+      </ul>
+      <p>
+        To exercise any of these rights, contact the operator via the
+        <a href="/imprint">Imprint</a> page.
+      </p>
+
+      <!-- ── 8. Security ── -->
+      <h2 class="h4 mt-4">8. Security Measures</h2>
+      <ul>
+        <li>Passwords are hashed with bcrypt (never stored in plain text)</li>
+        <li>All connections encrypted via HTTPS (Cloudflare Tunnel)</li>
+        <li>Session cookies marked as HttpOnly, Secure, and SameSite</li>
+        <li>Database access restricted to the application only</li>
+        <li>File uploads validated by type and size</li>
+        <li>SQL injection prevented via parameterized queries</li>
+      </ul>
+
+      <!-- ── 9. Changes ── -->
+      <h2 class="h4 mt-4">9. Changes to This Policy</h2>
+      <p>
+        This privacy policy may be updated occasionally. Changes will be
+        posted on this page with an updated date. For significant changes,
+        registered users will be notified by email.
+      </p>
+
+      <!-- ── 10. Contact ── -->
+      <h2 class="h4 mt-4">10. Contact</h2>
+      <p>
+        For questions about this privacy policy or your data,
+        see the <a href="/imprint">Imprint</a> page for contact information.
+      </p>
+
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
