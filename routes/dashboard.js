@@ -40,7 +40,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     res.render('dashboard', { title: 'My Bikes', bikes })
   } catch (err) {
     console.error('Dashboard error:', err.message)
-    req.flash('error', 'Could not load your bikes. Please try again.')
+    req.flash('error', req.t('errors.load_failed'))
     res.render('dashboard', { title: 'My Bikes', bikes: [] })
   }
 })

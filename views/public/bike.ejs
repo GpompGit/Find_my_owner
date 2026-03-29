@@ -1,114 +1,64 @@
-<%- include('../partials/header', { title: title }) %>
+<%- include('../partials/header', { title: bike.brand + ' ' + bike.color }) %>
 
 <!--
   Public Scan Page — Active Bike
-
-  This is what someone sees when they scan a QR code on an active bike.
-  It shows:
-  - The bike photo (if uploaded)
-  - Owner's first name only (GDPR — never full name, email, or phone)
-  - Bike details (brand, color, description)
-  - A contact form to message the owner
-
-  This page has NO navigation to authenticated areas.
-  It must work perfectly on mobile (QR scans happen on phones).
+  All text translated via t() — the scanner's phone language is auto-detected.
 -->
 <main class="container py-4">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-5">
-
-      <!-- Bike card — centered, clean layout -->
       <div class="card shadow-sm">
-
-        <!--
-          Bike photo — displayed at the top of the card.
-          card-img-top makes the image fill the card width with rounded top corners.
-          bike-photo class (from style.css) constrains height and uses object-fit.
-        -->
         <% if (bike.photo_url) { %>
           <img src="/uploads/photos/<%= bike.photo_url %>"
-               alt="Photo of <%= bike.brand %> <%= bike.color %>"
+               alt="<%= bike.brand %> <%= bike.color %>"
                class="card-img-top bike-photo">
         <% } %>
 
         <div class="card-body">
-          <!-- Bike identification -->
           <h4 class="card-title">
-            <i class="bi bi-bicycle"></i>
-            <%= bike.brand %> &middot; <%= bike.color %>
+            <i class="bi bi-bicycle"></i> <%= bike.brand %> &middot; <%= bike.color %>
           </h4>
-
-          <!--
-            Owner info — ONLY first name is shown.
-            The full name, email, phone are never sent to this template.
-          -->
           <p class="text-muted">
             <i class="bi bi-person"></i>
-            Belongs to <strong><%= bike.owner_first_name %></strong>
+            <%= t('public.belongs_to') %> <strong><%= bike.owner_first_name %></strong>
           </p>
 
-          <!-- Bike details list -->
           <ul class="list-group list-group-flush mb-3">
             <% if (bike.description) { %>
-              <li class="list-group-item">
-                <i class="bi bi-card-text"></i>
-                <%= bike.description %>
-              </li>
+              <li class="list-group-item"><i class="bi bi-card-text"></i> <%= bike.description %></li>
             <% } %>
             <% if (bike.garage_parking) { %>
-              <li class="list-group-item">
-                <i class="bi bi-p-circle text-primary"></i>
-                Garage parking registered
-              </li>
+              <li class="list-group-item"><i class="bi bi-p-circle text-primary"></i> <%= t('public.garage_registered') %></li>
             <% } %>
           </ul>
 
-          <!-- Contact form — allows the finder to message the owner -->
-          <h5><i class="bi bi-envelope"></i> Contact the Owner</h5>
-          <p class="text-muted small">
-            Found this bike? Send a message to the owner.
-            Your name and phone are optional.
-          </p>
+          <h5><i class="bi bi-envelope"></i> <%= t('public.contact_title') %></h5>
+          <p class="text-muted small"><%= t('public.contact_subtitle') %> <%= t('public.contact_optional') %></p>
 
-          <!--
-            Contact form submits to /contact/:bicycle_id
-            We use bike.id here (internal ID) because this form
-            is processed server-side — the ID is never visible in
-            the browser URL bar.
-          -->
           <form method="POST" action="/contact/<%= bike.id %>">
             <div class="mb-3">
-              <label for="finder_name" class="form-label">Your name (optional)</label>
-              <input type="text" class="form-control" id="finder_name"
-                     name="finder_name" maxlength="100">
+              <label for="finder_name" class="form-label"><%= t('public.finder_name') %></label>
+              <input type="text" class="form-control" id="finder_name" name="finder_name" maxlength="100">
             </div>
-
             <div class="mb-3">
-              <label for="finder_phone" class="form-label">Your phone (optional)</label>
-              <input type="tel" class="form-control" id="finder_phone"
-                     name="finder_phone" maxlength="30">
+              <label for="finder_phone" class="form-label"><%= t('public.finder_phone') %></label>
+              <input type="tel" class="form-control" id="finder_phone" name="finder_phone" maxlength="30">
             </div>
-
             <div class="mb-3">
-              <label for="message" class="form-label">Message</label>
-              <textarea class="form-control" id="message" name="message"
-                        rows="3" required
-                        placeholder="e.g. I found your bike at the train station..."></textarea>
+              <label for="message" class="form-label"><%= t('public.message') %></label>
+              <textarea class="form-control" id="message" name="message" rows="3" required
+                        placeholder="<%= t('public.message_placeholder') %>"></textarea>
             </div>
-
             <button type="submit" class="btn btn-primary w-100">
-              <i class="bi bi-send"></i> Send Message
+              <i class="bi bi-send"></i> <%= t('public.send_btn') %>
             </button>
           </form>
         </div>
 
-        <!-- Card footer — privacy notice -->
         <div class="card-footer text-muted small text-center">
-          <i class="bi bi-shield-lock"></i>
-          Your message goes directly to the owner. No data is shared with third parties.
+          <i class="bi bi-shield-lock"></i> <%= t('public.privacy_notice') %>
         </div>
       </div>
-
     </div>
   </div>
 </main>

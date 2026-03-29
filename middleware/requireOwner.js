@@ -45,7 +45,7 @@ const requireOwner = async (req, res, next) => {
     // or it belongs to someone else. We return 403 (Forbidden) either way
     // so we don't reveal whether the bike exists.
     if (rows.length === 0) {
-      req.flash('error', 'Bicycle not found or access denied')
+      req.flash('error', req.t ? req.t('bikes.not_found') : 'Bicycle not found or access denied')
       return res.status(403).redirect('/dashboard')
     }
 

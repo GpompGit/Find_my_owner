@@ -63,7 +63,7 @@ router.post('/contact/:id', async (req, res) => {
     // ── Validate message ──
     // The message is the only required field
     if (!message || message.trim().length === 0) {
-      req.flash('error', 'Please enter a message')
+      req.flash('error', req.t('public.message_required'))
       return res.redirect('back')  // Go back to the previous page
     }
 

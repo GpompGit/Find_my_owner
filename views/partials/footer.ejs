@@ -23,15 +23,15 @@
       Displayed on every page via this shared partial.
     -->
     <p class="text-center text-muted small">
-      <a href="/privacy" class="text-muted text-decoration-none">Privacy Policy</a>
+      <a href="/privacy" class="text-muted text-decoration-none"><%= t('legal.privacy') %></a>
       &middot;
-      <a href="/terms" class="text-muted text-decoration-none">Terms of Use</a>
+      <a href="/terms" class="text-muted text-decoration-none"><%= t('legal.terms') %></a>
       &middot;
-      <a href="/imprint" class="text-muted text-decoration-none">Imprint</a>
+      <a href="/imprint" class="text-muted text-decoration-none"><%= t('legal.imprint') %></a>
     </p>
     <p class="text-center text-muted small mb-0">
-      &copy; <%= new Date().getFullYear() %> Quartier Bike ID
-      &middot; Community bicycle registration
+      &copy; <%= new Date().getFullYear() %> <%= t('footer.copyright') %>
+      &middot; <%= t('footer.tagline') %>
     </p>
   </footer>
 

@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Admin Dashboard' }) %>
+<%- include('../partials/header', { title: t('admin.title') }) %>
 
 <!--
   Admin Dashboard — System Overview
@@ -10,7 +10,7 @@
   for users, bikes, stolen, garage, scans, and messages.
 -->
 <main class="container py-4">
-  <h2 class="mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+  <h2 class="mb-4"><i class="bi bi-shield-lock"></i> <%= t('admin.title') %></h2>
 
   <!--
     Stats grid — uses Bootstrap's responsive grid system.
@@ -26,7 +26,7 @@
         <div class="card-body">
           <i class="bi bi-people display-6 text-primary"></i>
           <h3 class="mt-2"><%= stats.users %></h3>
-          <p class="text-muted mb-0">Users</p>
+          <p class="text-muted mb-0"><%= t('admin.users') %></p>
         </div>
       </div>
     </div>
@@ -38,7 +38,7 @@
           <div class="card-body">
             <i class="bi bi-bicycle display-6 text-success"></i>
             <h3 class="mt-2"><%= stats.bikes %></h3>
-            <p class="text-muted mb-0">Bikes</p>
+            <p class="text-muted mb-0"><%= t('admin.bikes') %></p>
           </div>
         </div>
       </a>
@@ -50,7 +50,7 @@
         <div class="card-body">
           <i class="bi bi-exclamation-triangle display-6 text-danger"></i>
           <h3 class="mt-2"><%= stats.stolen %></h3>
-          <p class="text-muted mb-0">Stolen</p>
+          <p class="text-muted mb-0"><%= t('admin.stolen') %></p>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@
           <div class="card-body">
             <i class="bi bi-p-circle display-6 text-info"></i>
             <h3 class="mt-2"><%= stats.garage %></h3>
-            <p class="text-muted mb-0">Garage</p>
+            <p class="text-muted mb-0"><%= t('admin.garage') %></p>
           </div>
         </div>
       </a>
@@ -75,7 +75,7 @@
           <div class="card-body">
             <i class="bi bi-qr-code-scan display-6 text-warning"></i>
             <h3 class="mt-2"><%= stats.scans %></h3>
-            <p class="text-muted mb-0">Scans</p>
+            <p class="text-muted mb-0"><%= t('admin.scans') %></p>
           </div>
         </div>
       </a>
@@ -87,7 +87,7 @@
         <div class="card-body">
           <i class="bi bi-envelope display-6 text-secondary"></i>
           <h3 class="mt-2"><%= stats.messages %></h3>
-          <p class="text-muted mb-0">Messages</p>
+          <p class="text-muted mb-0"><%= t('admin.messages') %></p>
         </div>
       </div>
     </div>
@@ -98,17 +98,17 @@
   <div class="row g-3">
     <div class="col-12 col-md-4">
       <a href="/admin/bikes" class="btn btn-outline-primary w-100 py-3">
-        <i class="bi bi-list-ul"></i> All Bikes
+        <i class="bi bi-list-ul"></i> <%= t('admin.all_bikes') %>
       </a>
     </div>
     <div class="col-12 col-md-4">
       <a href="/admin/garage" class="btn btn-outline-info w-100 py-3">
-        <i class="bi bi-p-circle"></i> Garage Management
+        <i class="bi bi-p-circle"></i> <%= t('admin.garage_mgmt') %>
       </a>
     </div>
     <div class="col-12 col-md-4">
       <a href="/admin/scans" class="btn btn-outline-warning w-100 py-3">
-        <i class="bi bi-qr-code-scan"></i> Scan History
+        <i class="bi bi-qr-code-scan"></i> <%= t('admin.scan_history') %>
       </a>
     </div>
   </div>

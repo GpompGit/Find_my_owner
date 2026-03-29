@@ -90,14 +90,14 @@ router.post('/register', async (req, res) => {
     // Check that email, password, and name are present and not empty strings.
     // Phone is optional (used for contact, not required for registration).
     if (!email || !password || !name) {
-      req.flash('error', 'Email, password, and name are required')
+      req.flash('error', req.t('auth.email_name_password_required'))
       return res.redirect('/register')
     }
 
     // ── Validate password length ──
     // Short passwords are easy to brute-force even with bcrypt.
     if (password.length < 8) {
-      req.flash('error', 'Password must be at least 8 characters')
+      req.flash('error', req.t('auth.password_too_short'))
       return res.redirect('/register')
     }
 
@@ -110,7 +110,7 @@ router.post('/register', async (req, res) => {
     )
 
     if (existing.length > 0) {
-      req.flash('error', 'An account with this email already exists')
+      req.flash('error', req.t('auth.email_exists'))
       return res.redirect('/register')
     }
 
@@ -129,11 +129,11 @@ router.post('/register', async (req, res) => {
     )
 
     // ── Success — redirect to login ──
-    req.flash('success', 'Registration successful! Please log in.')
+    req.flash('success', req.t('auth.registration_success'))
     res.redirect('/login')
   } catch (err) {
     console.error('Registration error:', err.message)
-    req.flash('error', 'Registration failed. Please try again.')
+    req.flash('error', req.t('auth.registration_failed'))
     res.redirect('/register')
   }
 })
@@ -169,7 +169,7 @@ router.post('/login', async (req, res) => {
 
     // ── Validate input ──
     if (!email || !password) {
-      req.flash('error', 'Email and password are required')
+      req.flash('error', req.t('auth.email_password_required'))
       return res.redirect('/login')
     }
 
@@ -183,7 +183,7 @@ router.post('/login', async (req, res) => {
     // If no user found, use a GENERIC error message.
     // Don't say "email not found" — that reveals valid emails.
     if (rows.length === 0) {
-      req.flash('error', 'Invalid email or password')
+      req.flash('error', req.t('auth.invalid_credentials'))
       return res.redirect('/login')
     }
 
@@ -198,7 +198,7 @@ router.post('/login', async (req, res) => {
 
     if (!passwordMatch) {
       // Same generic message as "user not found" — prevents enumeration
-      req.flash('error', 'Invalid email or password')
+      req.flash('error', req.t('auth.invalid_credentials'))
       return res.redirect('/login')
     }
 
@@ -209,7 +209,7 @@ router.post('/login', async (req, res) => {
     req.session.regenerate((err) => {
       if (err) {
         console.error('Session regeneration error:', err.message)
-        req.flash('error', 'Login failed. Please try again.')
+        req.flash('error', req.t('auth.login_failed'))
         return res.redirect('/login')
       }
 
@@ -227,7 +227,7 @@ router.post('/login', async (req, res) => {
       req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err.message)
-          req.flash('error', 'Login failed. Please try again.')
+          req.flash('error', req.t('auth.login_failed'))
           return res.redirect('/login')
         }
         res.redirect('/dashboard')
@@ -235,7 +235,7 @@ router.post('/login', async (req, res) => {
     })
   } catch (err) {
     console.error('Login error:', err.message)
-    req.flash('error', 'Login failed. Please try again.')
+    req.flash('error', req.t('auth.login_failed'))
     res.redirect('/login')
   }
 })

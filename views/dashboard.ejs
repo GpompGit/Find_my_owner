@@ -1,92 +1,68 @@
-<%- include('partials/header', { title: 'My Bikes' }) %>
+<%- include('partials/header', { title: t('dashboard.title') }) %>
 
-<!--
-  Dashboard — User's Bike List
-
-  Shows all bicycles registered by the logged-in user.
-  Uses Bootstrap table with status badges and action buttons.
-  Placeholder content — will be populated from the database.
--->
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-speedometer2"></i> My Bikes</h2>
+    <h2><i class="bi bi-speedometer2"></i> <%= t('dashboard.title') %></h2>
     <a href="/bikes/add" class="btn btn-primary">
-      <i class="bi bi-plus-circle"></i> Add Bike
+      <i class="bi bi-plus-circle"></i> <%= t('dashboard.add_bike') %>
     </a>
   </div>
 
-  <!--
-    Check if the user has any bikes registered.
-    'bikes' is an array passed from the route handler.
-  -->
   <% if (bikes.length === 0) { %>
-    <!-- Empty state — shown when user has no bikes -->
     <div class="text-center py-5">
       <i class="bi bi-bicycle display-1 text-muted"></i>
-      <p class="lead text-muted mt-3">You haven't registered any bikes yet.</p>
+      <p class="lead text-muted mt-3"><%= t('dashboard.no_bikes') %></p>
       <a href="/bikes/add" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Register Your First Bike
+        <i class="bi bi-plus-circle"></i> <%= t('dashboard.register_first') %>
       </a>
     </div>
   <% } else { %>
-    <!-- Bike list table — shown when user has bikes -->
     <div class="table-responsive">
       <table class="table table-striped table-hover">
         <thead class="table-dark">
           <tr>
-            <th>Brand</th>
-            <th>Color</th>
-            <th>Status</th>
-            <th class="d-none d-md-table-cell">Garage</th>
-            <th>Actions</th>
+            <th><%= t('dashboard.brand') %></th>
+            <th><%= t('dashboard.color') %></th>
+            <th><%= t('dashboard.status') %></th>
+            <th class="d-none d-md-table-cell"><%= t('dashboard.garage') %></th>
+            <th><%= t('dashboard.actions') %></th>
           </tr>
         </thead>
         <tbody>
-          <!-- Loop through bikes array and create a row for each -->
           <% bikes.forEach(bike => { %>
             <tr>
               <td><%= bike.brand %></td>
               <td><%= bike.color %></td>
               <td>
-                <!-- Status badge — color changes based on status -->
                 <% if (bike.status === 'active') { %>
-                  <span class="badge bg-success">Active</span>
+                  <span class="badge bg-success"><%= t('dashboard.status_active') %></span>
                 <% } else if (bike.status === 'stolen') { %>
-                  <span class="badge bg-danger">Stolen</span>
+                  <span class="badge bg-danger"><%= t('dashboard.status_stolen') %></span>
                 <% } else { %>
-                  <span class="badge bg-secondary">Inactive</span>
+                  <span class="badge bg-secondary"><%= t('dashboard.status_inactive') %></span>
                 <% } %>
               </td>
               <td class="d-none d-md-table-cell">
-                <!-- Garage parking indicator -->
                 <% if (bike.garage_parking) { %>
-                  <i class="bi bi-p-circle-fill text-primary" title="Garage parking"></i>
+                  <i class="bi bi-p-circle-fill text-primary" title="<%= t('dashboard.garage') %>"></i>
                 <% } %>
               </td>
               <td>
-                <!-- Action buttons — small size for table use -->
                 <div class="d-flex gap-1">
-                  <a href="/bikes/edit/<%= bike.id %>" class="btn btn-sm btn-outline-primary"
-                     title="Edit">
+                  <a href="/bikes/edit/<%= bike.id %>" class="btn btn-sm btn-outline-primary" title="<%= t('bikes.edit_title') %>">
                     <i class="bi bi-pencil"></i>
                   </a>
                   <% if (bike.status === 'active') { %>
-                    <!--
-                      Report stolen button — POST form disguised as a button.
-                      confirm() shows a dialog before submitting.
-                    -->
                     <form method="POST" action="/bikes/stolen/<%= bike.id %>" class="d-inline">
                       <button type="submit" class="btn btn-sm btn-outline-danger"
-                              title="Report stolen"
-                              onclick="return confirm('Mark this bike as stolen?')">
+                              title="<%= t('bikes.report_stolen') %>"
+                              onclick="return confirm('<%= t('dashboard.confirm_stolen') %>')">
                         <i class="bi bi-exclamation-triangle"></i>
                       </button>
                     </form>
                   <% } else if (bike.status === 'stolen') { %>
-                    <!-- Mark recovered button -->
                     <form method="POST" action="/bikes/recovered/<%= bike.id %>" class="d-inline">
-                      <button type="submit" class="btn btn-sm btn-outline-success"
-                              title="Mark recovered">
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="<%= t('bikes.mark_recovered') %>">
                         <i class="bi bi-check-circle"></i>
                       </button>
                     </form>

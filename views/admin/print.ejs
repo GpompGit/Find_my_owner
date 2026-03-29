@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Print Labels' }) %>
+<%- include('../partials/header', { title: t('admin.print_labels') }) %>
 
 <!--
   Admin — Print-Ready Label Page
@@ -14,21 +14,21 @@
 -->
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-    <h2><i class="bi bi-printer"></i> Print Labels</h2>
+    <h2><i class="bi bi-printer"></i> <%= t('admin.print_labels') %></h2>
     <div class="d-flex gap-2">
       <!-- Browser print button -->
       <button onclick="window.print()" class="btn btn-primary">
-        <i class="bi bi-printer"></i> Print (Browser)
+        <i class="bi bi-printer"></i> <%= t('admin.print_browser') %>
       </button>
       <!--
         Dymo print button — calls the dymo-print.js function.
         Only works if the Dymo Web Service is installed on the admin's computer.
       -->
       <button onclick="printBikeLabels(<%= bike.id %>)" class="btn btn-outline-primary">
-        <i class="bi bi-printer-fill"></i> Print with Dymo
+        <i class="bi bi-printer-fill"></i> <%= t('admin.print_dymo') %>
       </button>
       <a href="/admin/bikes" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
       </a>
     </div>
   </div>
@@ -40,7 +40,7 @@
     <div class="col-12 col-md-6 col-lg-4">
       <div class="card text-center">
         <div class="card-body">
-          <h6 class="card-title">Bike ID Label</h6>
+          <h6 class="card-title"><%= t('admin.bike_label') %></h6>
           <!-- QR code image — generated during bike registration -->
           <img src="/uploads/qr/<%= bike.tag_uid %>.png"
                alt="QR code for <%= bike.brand %> <%= bike.color %>"
@@ -48,7 +48,7 @@
           <p class="mb-1"><strong><%= bike.brand %> &middot; <%= bike.color %></strong></p>
           <% if (bike.garage_parking) { %>
             <p class="text-primary mb-0">
-              <i class="bi bi-p-circle-fill"></i> Garage
+              <i class="bi bi-p-circle-fill"></i> <%= t('admin.garage') %>
             </p>
           <% } %>
         </div>
@@ -63,12 +63,12 @@
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card text-center">
           <div class="card-body">
-            <h6 class="card-title">TWINT Payment Label</h6>
+            <h6 class="card-title"><%= t('admin.twint_label') %></h6>
             <img src="/uploads/qr/twint_<%= bike.tag_uid %>.png"
                  alt="TWINT payment QR code"
                  class="qr-code-display mb-3">
-            <p class="mb-1"><strong>Garage contribution</strong></p>
-            <p class="mb-1">CHF <%= parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2) %> / year</p>
+            <p class="mb-1"><strong><%= t('admin.garage_contribution') %></strong></p>
+            <p class="mb-1">CHF <%= parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2) %> <%= t('admin.per_year') %></p>
             <p class="text-muted small mb-0">Quartier Bike ID</p>
           </div>
         </div>
@@ -81,11 +81,11 @@
   <div class="mt-4 no-print">
     <div class="card">
       <div class="card-body">
-        <h6>Bike Details</h6>
-        <p class="mb-1"><strong>Owner:</strong> <%= bike.owner_name %></p>
-        <p class="mb-1"><strong>Bike:</strong> <%= bike.brand %> <%= bike.color %></p>
+        <h6><%= t('admin.bike') %></h6>
+        <p class="mb-1"><strong><%= t('admin.owner') %>:</strong> <%= bike.owner_name %></p>
+        <p class="mb-1"><strong><%= t('admin.bike') %>:</strong> <%= bike.brand %> <%= bike.color %></p>
         <p class="mb-1"><strong>Tag:</strong> <code><%= bike.tag_uid %></code></p>
-        <p class="mb-0"><strong>Garage:</strong> <%= bike.garage_parking ? 'Yes' : 'No' %></p>
+        <p class="mb-0"><strong><%= t('admin.garage') %>:</strong> <%= bike.garage_parking ? 'Yes' : 'No' %></p>
       </div>
     </div>
   </div>

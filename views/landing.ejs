@@ -1,43 +1,33 @@
-<%- include('partials/header', { title: 'Welcome' }) %>
+<%- include('partials/header', { title: t('landing.title') }) %>
 
 <!--
   Landing page — shown to visitors who are not logged in.
-  Simple hero section with a call to action to register or log in.
-  Uses Bootstrap's text-center, py-5, and button components.
+  All text uses t() translation function for multi-language support.
 -->
 <main class="container py-5">
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6 text-center">
 
-      <!-- Hero icon — large bicycle icon from Bootstrap Icons -->
       <i class="bi bi-bicycle display-1 text-primary"></i>
+      <h1 class="mt-3"><%= t('landing.heading') %></h1>
+      <p class="lead text-muted"><%= t('landing.subtitle') %></p>
 
-      <h1 class="mt-3">Quartier Bike ID</h1>
-      <p class="lead text-muted">
-        Community bicycle registration for your neighbourhood.
-        Register your bikes, get QR code labels, and help recover stolen bicycles.
-      </p>
-
-      <!-- Call to action buttons -->
       <div class="d-flex justify-content-center gap-3 mt-4">
         <a href="/register" class="btn btn-primary btn-lg">
-          <i class="bi bi-person-plus"></i> Register
+          <i class="bi bi-person-plus"></i> <%= t('landing.register_btn') %>
         </a>
         <a href="/login" class="btn btn-outline-secondary btn-lg">
-          <i class="bi bi-box-arrow-in-right"></i> Login
+          <i class="bi bi-box-arrow-in-right"></i> <%= t('landing.login_btn') %>
         </a>
       </div>
 
-      <!-- Feature highlights -->
       <div class="row mt-5 text-start">
         <div class="col-12 col-md-4 mb-3">
           <div class="card h-100">
             <div class="card-body text-center">
               <i class="bi bi-qr-code display-6 text-primary"></i>
-              <h6 class="card-title mt-2">QR Labels</h6>
-              <p class="card-text small text-muted">
-                Each bike gets a unique QR code. Anyone can scan it to identify the owner.
-              </p>
+              <h6 class="card-title mt-2"><%= t('landing.feature_qr_title') %></h6>
+              <p class="card-text small text-muted"><%= t('landing.feature_qr_text') %></p>
             </div>
           </div>
         </div>
@@ -45,10 +35,8 @@
           <div class="card h-100">
             <div class="card-body text-center">
               <i class="bi bi-geo-alt display-6 text-danger"></i>
-              <h6 class="card-title mt-2">Stolen Recovery</h6>
-              <p class="card-text small text-muted">
-                If your bike is stolen, scanning the QR can share the finder's location with you.
-              </p>
+              <h6 class="card-title mt-2"><%= t('landing.feature_stolen_title') %></h6>
+              <p class="card-text small text-muted"><%= t('landing.feature_stolen_text') %></p>
             </div>
           </div>
         </div>
@@ -56,10 +44,8 @@
           <div class="card h-100">
             <div class="card-body text-center">
               <i class="bi bi-shield-lock display-6 text-success"></i>
-              <h6 class="card-title mt-2">Privacy First</h6>
-              <p class="card-text small text-muted">
-                Data stays on a local server in Switzerland. Location data auto-deletes after 90 days.
-              </p>
+              <h6 class="card-title mt-2"><%= t('landing.feature_privacy_title') %></h6>
+              <p class="card-text small text-muted"><%= t('landing.feature_privacy_text') %></p>
             </div>
           </div>
         </div>

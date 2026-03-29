@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'All Bikes' }) %>
+<%- include('../partials/header', { title: t('admin.all_bikes') }) %>
 
 <!--
   Admin — All Bikes List
@@ -9,9 +9,9 @@
 -->
 <main class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-list-ul"></i> All Bikes <span class="badge bg-secondary"><%= bikes.length %></span></h2>
+    <h2><i class="bi bi-list-ul"></i> <%= t('admin.all_bikes') %> <span class="badge bg-secondary"><%= bikes.length %></span></h2>
     <a href="/admin" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Back
+      <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
     </a>
   </div>
 
@@ -19,13 +19,13 @@
     <table class="table table-striped table-hover">
       <thead class="table-dark">
         <tr>
-          <th>Owner</th>
-          <th>Brand</th>
-          <th>Color</th>
-          <th>Status</th>
-          <th class="d-none d-md-table-cell">Garage</th>
-          <th class="d-none d-lg-table-cell">Registered</th>
-          <th>Actions</th>
+          <th><%= t('admin.owner') %></th>
+          <th><%= t('dashboard.brand') %></th>
+          <th><%= t('dashboard.color') %></th>
+          <th><%= t('dashboard.status') %></th>
+          <th class="d-none d-md-table-cell"><%= t('admin.garage') %></th>
+          <th class="d-none d-lg-table-cell"><%= t('admin.registered') %></th>
+          <th><%= t('dashboard.actions') %></th>
         </tr>
       </thead>
       <tbody>
@@ -40,11 +40,11 @@
             <td><%= bike.color %></td>
             <td>
               <% if (bike.status === 'active') { %>
-                <span class="badge bg-success">Active</span>
+                <span class="badge bg-success"><%= t('dashboard.status_active') %></span>
               <% } else if (bike.status === 'stolen') { %>
-                <span class="badge bg-danger">Stolen</span>
+                <span class="badge bg-danger"><%= t('dashboard.status_stolen') %></span>
               <% } else { %>
-                <span class="badge bg-secondary">Inactive</span>
+                <span class="badge bg-secondary"><%= t('dashboard.status_inactive') %></span>
               <% } %>
             </td>
             <td class="d-none d-md-table-cell">
@@ -58,7 +58,7 @@
             <td>
               <!-- Print label button -->
               <a href="/admin/print/<%= bike.id %>" class="btn btn-sm btn-outline-secondary"
-                 title="Print labels">
+                 title="<%= t('admin.print_labels') %>">
                 <i class="bi bi-printer"></i>
               </a>
             </td>
