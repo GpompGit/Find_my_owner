@@ -77,12 +77,15 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'"]
+      connectSrc: ["'self'"],
+      // Prevent browser from upgrading HTTP requests to HTTPS on local network
+      upgradeInsecureRequests: null
     }
   },
   // Disable HSTS when running over plain HTTP (local/NAS access).
   // Cloudflare Tunnel handles HTTPS for public access.
-  hsts: false
+  hsts: false,
+  crossOriginOpenerPolicy: false
 }))
 
 /**
