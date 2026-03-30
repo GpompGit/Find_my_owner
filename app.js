@@ -79,7 +79,10 @@ app.use(helmet({
       fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
       connectSrc: ["'self'"]
     }
-  }
+  },
+  // Disable HSTS when running over plain HTTP (local/NAS access).
+  // Cloudflare Tunnel handles HTTPS for public access.
+  hsts: false
 }))
 
 /**
