@@ -26,7 +26,7 @@
 const express = require('express')
 const path = require('path')
 const fs = require('fs').promises   // Promise-based file system operations
-const { v4: uuidv4 } = require('uuid')  // Generate unique IDs (v4 = random)
+const crypto = require('crypto')         // Built-in: crypto.randomUUID() for unique IDs
 const QRCode = require('qrcode')    // Generate QR code images
 const multer = require('multer')    // Handle file uploads (multipart/form-data)
 const db = require('../db/connection')
@@ -71,7 +71,7 @@ const storage = multer.diskStorage({
     const ext = path.extname(file.originalname).toLowerCase()
 
     // Generate a UUID filename: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
-    cb(null, uuidv4() + ext)
+    cb(null, crypto.randomUUID() + ext)
   }
 })
 
@@ -151,7 +151,7 @@ router.post('/add', requireAuth, upload.single('photo'), async (req, res) => {
     // This UUID becomes part of the public QR code URL.
     // Using UUID v4 (random) — virtually impossible to guess.
     // Example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-    const tagUid = uuidv4()
+    const tagUid = crypto.randomUUID()
 
     // ── Build the public URL for this bike ──
     // This is what the QR code will point to.
