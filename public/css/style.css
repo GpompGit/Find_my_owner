@@ -112,8 +112,18 @@ html {
  * A subtle gradient background gives depth without overwhelming.
  */
 .hero-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
   overflow: hidden;
+}
+
+.hero-section .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.hero-section .badge {
+  background: rgba(13, 110, 253, 0.2) !important;
+  color: #6ea8fe !important;
 }
 
 /*
@@ -194,6 +204,12 @@ html {
   justify-content: center;
   font-weight: 700;
   font-size: 0.8rem;
+}
+
+/* ─── Features Section Background ───────────────────────────────────────── */
+
+.features-section {
+  background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
 }
 
 /* ─── Feature Icons (Landing Page) ───────────────────────────────────────── */

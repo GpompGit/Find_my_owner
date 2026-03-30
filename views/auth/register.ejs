@@ -42,6 +42,15 @@
               <label for="phone"><i class="bi bi-telephone"></i> <%= t('auth.phone') %></label>
             </div>
 
+            <!-- Consent: first name visible on QR scan -->
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="visibilityConsent"
+                     name="visibility_consent" value="1" required>
+              <label class="form-check-label small" for="visibilityConsent">
+                <%= t('auth.visibility_consent') %>
+              </label>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100 mb-3">
               <i class="bi bi-check-circle"></i> <%= t('auth.create_account') %>
             </button>
