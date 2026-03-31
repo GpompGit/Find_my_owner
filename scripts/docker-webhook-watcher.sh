@@ -23,16 +23,16 @@
 #   * * * * * /volume1/docker/quartier-bike-id/scripts/docker-webhook-watcher.sh
 
 PROJECT_DIR="/volume1/docker/quartier-bike-id"
-# Trigger file lives in uploads/qr/ which is a Docker volume
-# visible to both the container and the host.
-TRIGGER_FILE="$PROJECT_DIR/uploads/qr/.deploy-trigger"
 
-# If the trigger file exists, a deploy was requested
-if [ -f "$TRIGGER_FILE" ]; then
+# Check for trigger file INSIDE the Docker container
+# (uploads/qr is a named Docker volume, not a host bind mount)
+TRIGGER_EXISTS=$(docker exec quartier-bike-id test -f /app/uploads/qr/.deploy-trigger && echo "yes" || echo "no")
+
+if [ "$TRIGGER_EXISTS" = "yes" ]; then
   echo "$(date): Deploy trigger detected!"
 
-  # Remove the trigger file first (prevent re-triggering)
-  rm -f "$TRIGGER_FILE"
+  # Remove the trigger file inside the container (prevent re-triggering)
+  docker exec quartier-bike-id rm -f /app/uploads/qr/.deploy-trigger
 
   # Change to project directory
   cd "$PROJECT_DIR" || exit 1
