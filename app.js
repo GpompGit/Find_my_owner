@@ -78,7 +78,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://127.0.0.1:41951"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-hashes'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://127.0.0.1:41951"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
