@@ -360,6 +360,21 @@ router.get('/scans', async (req, res) => {
   }
 })
 
+/**
+ * POST /admin/scans/:id/delete — Delete a scan entry
+ */
+router.post('/scans/:id/delete', async (req, res) => {
+  try {
+    await db.query('DELETE FROM scans WHERE id = ?', [req.params.id])
+    req.flash('success', 'Scan deleted')
+    res.redirect('/admin/scans')
+  } catch (err) {
+    console.error('Delete scan error:', err.message)
+    req.flash('error', 'Failed to delete scan')
+    res.redirect('/admin/scans')
+  }
+})
+
 // ─── USER MANAGEMENT ────────────────────────────────────────────────────────
 
 /**

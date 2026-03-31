@@ -27,6 +27,7 @@
           <th><%= t('dashboard.status') %></th>
           <th class="d-none d-md-table-cell"><%= t('admin.location') %></th>
           <th class="d-none d-lg-table-cell"><%= t('admin.device') %></th>
+          <th><%= t('admin.action') %></th>
         </tr>
       </thead>
       <tbody>
@@ -78,6 +79,15 @@
               <small class="text-muted">
                 <%= scan.user_agent ? scan.user_agent.substring(0, 50) + '...' : '—' %>
               </small>
+            </td>
+            <td>
+              <form method="POST" action="/admin/scans/<%= scan.id %>/delete"
+                    onsubmit="return confirm('Delete this scan entry?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
             </td>
           </tr>
         <% }) %>
