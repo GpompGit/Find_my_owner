@@ -83,7 +83,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://127.0.0.1:41951"],
+      connectSrc: ["'self'", "https://127.0.0.1:41951", "https://cdn.jsdelivr.net"],
       // Prevent browser from upgrading HTTP requests to HTTPS on local network
       upgradeInsecureRequests: null
     }
