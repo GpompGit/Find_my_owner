@@ -1,118 +1,35 @@
 /**
- * public/js/dymo-print.js — Dymo LabelWriter SDK Integration (Client-Side)
+ * public/js/dymo-print.js — Dymo LabelWriter Print via Web Service REST API
  *
  * Prints QR code labels on the Dymo LabelWriter 450 Twin Turbo.
- * Uses the 30332 square labels (25 x 25 mm) for bike ID QR codes.
- *
- * Label layout (25 x 25 mm square):
- * ┌─────────────┐
- * │             │
- * │  ┌───────┐  │
- * │  │  QR   │  │
- * │  │ 20x20 │  │
- * │  └───────┘  │
- * │             │
- * └─────────────┘
- *
- * The QR code fills most of the label — no text.
- * All information is shown on the scan page when the QR is scanned.
- *
- * For garage bikes, a second label is printed with the TWINT payment QR
- * on the same 25x25mm square format.
+ * Uses the Dymo Web Service REST API (https://127.0.0.1:41951).
+ * No SDK required — communicates directly via fetch().
  *
  * Prerequisites:
  * - Dymo Label Software installed on the admin's PC
- * - Dymo Web Service running (background service)
+ * - Dymo Web Service running (background service, port 41951)
  * - 30332 square labels loaded in the printer
  */
 
-/**
- * Print bike labels using the Dymo SDK.
- *
- * @param {number} bikeId - The bike's database ID
- */
-async function printBikeLabels(bikeId) {
-  try {
-    // ── Step 1: Fetch bike data from our API ──
-    var response = await fetch('/admin/bike-data/' + bikeId)
-
-    if (!response.ok) {
-      alert('Could not load bike data. Please try again.')
-      return
-    }
-
-    var bike = await response.json()
-
-    // ── Step 2: Check if Dymo SDK is available ──
-    if (typeof dymo === 'undefined' || !dymo.label || !dymo.label.framework) {
-      alert(
-        'Dymo Label Software is not detected.\n\n' +
-        'Please install the Dymo Label Software and ensure the ' +
-        'Dymo Web Service is running.\n\n' +
-        'Falling back to browser printing...'
-      )
-      window.print()
-      return
-    }
-
-    // ── Step 3: Find the Dymo printer ──
-    var printers = dymo.label.framework.getPrinters()
-    var printer = printers.find(function (p) {
-      return p.name.toUpperCase().indexOf('DYMO') !== -1
-    })
-
-    if (!printer) {
-      alert('No Dymo printer found. Please check the connection.')
-      return
-    }
-
-    // ── Step 4: Build and print the bike ID label (25x25mm square) ──
-    var bikeLabelXml = buildSquareQrLabel(bike.qr_url)
-    var bikeLabel = dymo.label.framework.openLabelXml(bikeLabelXml)
-    bikeLabel.print(printer.name)
-
-    // ── Step 5: Print TWINT label if garage parking (same 25x25mm) ──
-    if (bike.garage_parking && bike.twint_qr_url) {
-      var twintLabelXml = buildSquareQrLabel(bike.twint_qr_url)
-      var twintLabel = dymo.label.framework.openLabelXml(twintLabelXml)
-      twintLabel.print(printer.name)
-    }
-
-    alert('Labels sent to printer: ' + printer.name)
-  } catch (err) {
-    console.error('Dymo print error:', err)
-    alert('Print failed: ' + err.message + '\n\nTry using browser print instead.')
-  }
-}
+var DYMO_BASE = 'https://127.0.0.1:41951/DYMO/DLS/Printing'
 
 /**
- * Build Dymo label XML for a 25x25mm square QR code label.
+ * Print a single QR label via Dymo Web Service REST API.
  *
- * The label contains only the QR code image, centred and filling
- * as much of the 25x25mm area as possible (~20mm QR with ~2.5mm margins).
- *
- * Dymo SDK uses XML to define label layouts. The label dimensions
- * are specified in twips (1 inch = 1440 twips):
- * - 25mm = ~0.984 inches = ~1417 twips
- *
- * @param {string} qrImageUrl - URL path to the QR code PNG image
- * @returns {string} Dymo label XML
+ * @param {string} printerName - Dymo printer name
+ * @param {string} imageDataBase64 - Base64-encoded PNG image data
  */
-function buildSquareQrLabel(qrImageUrl) {
-  // 25mm ≈ 1417 twips (1 inch = 1440 twips, 25mm = 0.984 inches)
-  var labelSize = '1417'
-  // QR area: ~20mm = 1134 twips, centered with ~2.5mm margins
-  var qrSize = '1134'
-  var margin = '142'  // (1417 - 1134) / 2 ≈ 142 twips = ~2.5mm
-
-  return '<?xml version="1.0" encoding="utf-8"?>' +
+async function printLabel(printerName, imageDataBase64) {
+  // Build label XML with embedded base64 image
+  var labelXml = '<?xml version="1.0" encoding="utf-8"?>' +
     '<DieCutLabel Version="8.0" Units="twips">' +
       '<PaperOrientation>Landscape</PaperOrientation>' +
       '<Id>Small30332</Id>' +
       '<PaperName>30332 1 in x 1 in</PaperName>' +
       '<DrawCommands>' +
-        // Draw the QR code image, centred in the label
-        '<RoundRectangle X="0" Y="0" Width="' + labelSize + '" Height="' + labelSize + '" Rx="0" Ry="0" />' +
+        '<RoundRectangle X="0" Y="0" Width="1440" Height="1440" Rx="0" Ry="0" />' +
+      '</DrawCommands>' +
+      '<ObjectInfo>' +
         '<ImageObject>' +
           '<Name>QRCode</Name>' +
           '<ForeColor Alpha="255" Red="0" Green="0" Blue="0" />' +
@@ -121,12 +38,136 @@ function buildSquareQrLabel(qrImageUrl) {
           '<Rotation>Rotation0</Rotation>' +
           '<IsMirrored>False</IsMirrored>' +
           '<IsVariable>False</IsVariable>' +
-          '<ImageLocation>' + qrImageUrl + '</ImageLocation>' +
+          '<Image>' + imageDataBase64 + '</Image>' +
           '<ScaleMode>Uniform</ScaleMode>' +
           '<BorderWidth>0</BorderWidth>' +
+          '<BorderColor Alpha="255" Red="0" Green="0" Blue="0" />' +
           '<HorizontalAlignment>Center</HorizontalAlignment>' +
           '<VerticalAlignment>Center</VerticalAlignment>' +
         '</ImageObject>' +
-      '</DrawCommands>' +
+        '<Bounds X="100" Y="100" Width="1240" Height="1240" />' +
+      '</ObjectInfo>' +
     '</DieCutLabel>'
+
+  // Build print request XML
+  var printXml = '<?xml version="1.0" encoding="utf-8"?>' +
+    '<LabelWriterPrintParams>' +
+      '<Copies>1</Copies>' +
+      '<PrintQuality>BarcodeAndGraphics</PrintQuality>' +
+    '</LabelWriterPrintParams>'
+
+  var formData = 'printerName=' + encodeURIComponent(printerName) +
+    '&labelXml=' + encodeURIComponent(labelXml) +
+    '&printParamsXml=' + encodeURIComponent(printXml) +
+    '&labelSetXml='
+
+  var response = await fetch(DYMO_BASE + '/PrintLabel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData
+  })
+
+  if (!response.ok) {
+    var errText = await response.text()
+    throw new Error('Print failed: ' + errText)
+  }
+}
+
+/**
+ * Fetch an image URL and return its base64 content.
+ */
+async function imageToBase64(url) {
+  var response = await fetch(url)
+  var blob = await response.blob()
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader()
+    reader.onloadend = function () {
+      // Remove the data:image/png;base64, prefix
+      var base64 = reader.result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * Print the bike ID QR label.
+ *
+ * @param {number} bikeId - The bike's database ID
+ */
+async function printBikeLabel(bikeId) {
+  try {
+    var response = await fetch('/admin/bike-data/' + bikeId)
+    if (!response.ok) {
+      alert('Could not load bike data.')
+      return
+    }
+    var bike = await response.json()
+
+    // Get printer name
+    var printersResponse = await fetch(DYMO_BASE + '/GetPrinters')
+    var printersXml = await printersResponse.text()
+    var match = printersXml.match(/<Name>(.*?)<\/Name>/)
+    if (!match) {
+      alert('No Dymo printer found. Is the Dymo Web Service running?')
+      return
+    }
+    var printerName = match[1]
+
+    // Convert QR image to base64
+    var qrBase64 = await imageToBase64(bike.qr_url)
+
+    await printLabel(printerName, qrBase64)
+    alert('Bike QR label sent to: ' + printerName)
+  } catch (err) {
+    console.error('Dymo print error:', err)
+    alert('Print failed: ' + err.message)
+  }
+}
+
+/**
+ * Print the TWINT payment QR label (garage bikes only).
+ *
+ * @param {number} bikeId - The bike's database ID
+ */
+async function printTwintLabel(bikeId) {
+  try {
+    var response = await fetch('/admin/bike-data/' + bikeId)
+    if (!response.ok) {
+      alert('Could not load bike data.')
+      return
+    }
+    var bike = await response.json()
+
+    if (!bike.twint_qr_url) {
+      alert('No TWINT QR code for this bike.')
+      return
+    }
+
+    // Get printer name
+    var printersResponse = await fetch(DYMO_BASE + '/GetPrinters')
+    var printersXml = await printersResponse.text()
+    var match = printersXml.match(/<Name>(.*?)<\/Name>/)
+    if (!match) {
+      alert('No Dymo printer found.')
+      return
+    }
+    var printerName = match[1]
+
+    var twintBase64 = await imageToBase64(bike.twint_qr_url)
+
+    await printLabel(printerName, twintBase64)
+    alert('TWINT label sent to: ' + printerName)
+  } catch (err) {
+    console.error('Dymo print error:', err)
+    alert('Print failed: ' + err.message)
+  }
+}
+
+/**
+ * Print both labels (legacy function for backwards compatibility).
+ */
+async function printBikeLabels(bikeId) {
+  await printBikeLabel(bikeId)
 }

@@ -17,9 +17,6 @@
       <button onclick="window.print()" class="btn btn-primary">
         <i class="bi bi-printer"></i> <%= t('admin.print_browser') %>
       </button>
-      <button onclick="printBikeLabels(<%= bike.id %>)" class="btn btn-outline-primary">
-        <i class="bi bi-printer-fill"></i> <%= t('admin.print_dymo') %>
-      </button>
       <a href="/admin/bikes" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> <%= t('admin.back') %>
       </a>
@@ -53,6 +50,11 @@
       <p class="text-center text-muted small mt-2 no-print">
         <%= bike.brand %> &middot; <%= bike.color %>
       </p>
+      <div class="text-center no-print mt-2">
+        <button onclick="printBikeLabel(<%= bike.id %>)" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-printer-fill"></i> Print QR with Dymo
+        </button>
+      </div>
     </div>
 
     <!-- Label 2 — TWINT Payment QR (25x25mm square, only for garage bikes) -->
@@ -67,6 +69,11 @@
         <p class="text-center text-muted small mt-2 no-print">
           <%= t('admin.garage_contribution') %> — CHF <%= parseFloat(process.env.GARAGE_FEE_CHF || 40).toFixed(2) %> <%= t('admin.per_year') %>
         </p>
+        <div class="text-center no-print mt-2">
+          <button onclick="printTwintLabel(<%= bike.id %>)" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-printer-fill"></i> Print TWINT with Dymo
+          </button>
+        </div>
       </div>
     <% } %>
 
@@ -86,7 +93,6 @@
   </div>
 </main>
 
-<script src="https://127.0.0.1:41951/DYMO/DLS/Printing/js/DYMO.Label.Framework.latest.js"></script>
 <script src="/js/dymo-print.js"></script>
 
 <%- include('../partials/footer') %>
