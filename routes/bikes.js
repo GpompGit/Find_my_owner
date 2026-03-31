@@ -29,9 +29,22 @@ const fs = require('fs').promises   // Promise-based file system operations
 const crypto = require('crypto')         // Built-in: crypto.randomUUID() for unique IDs
 const QRCode = require('qrcode')    // Generate QR code images
 const multer = require('multer')    // Handle file uploads (multipart/form-data)
+const nodemailer = require('nodemailer')
 const db = require('../db/connection')
 const requireAuth = require('../middleware/requireAuth')
 const requireOwner = require('../middleware/requireOwner')
+const escapeHtml = require('../utils/escapeHtml')
+
+// Email transporter for admin notifications
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT, 10) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+})
 
 const router = express.Router()
 
@@ -204,6 +217,53 @@ router.post('/add', requireAuth, upload.single('photo'), async (req, res) => {
         const twintUrl = `${process.env.TWINT_PAYMENT_URL}?amount=40.00&message=Garage+${tagUid}`
         const twintQrPath = path.join(__dirname, '..', 'uploads', 'qr', `twint_${tagUid}.png`)
         await QRCode.toFile(twintQrPath, twintUrl, { width: 300 })
+      }
+    }
+
+    // ── Notify admin of new bike registration ──
+    if (process.env.ADMIN_EMAIL) {
+      const [bikeRows] = await db.query(
+        'SELECT id FROM bicycles WHERE tag_uid = ?', [tagUid]
+      )
+      const bikeId = bikeRows[0].id
+      const printUrl = `${process.env.BASE_URL}/admin/print/${bikeId}`
+      const [userRows] = await db.query(
+        'SELECT name, email FROM users WHERE id = ?', [ownerId]
+      )
+      const userName = userRows[0] ? escapeHtml(userRows[0].name) : 'Unknown'
+      const userEmail = userRows[0] ? escapeHtml(userRows[0].email) : ''
+
+      try {
+        await transporter.sendMail({
+          from: `"Quartier Bike ID" <${process.env.SMTP_USER}>`,
+          to: process.env.ADMIN_EMAIL,
+          subject: `New bike registered: ${brand} ${color} — ${userName}`,
+          html: `
+            <h2>New Bike Registered</h2>
+            <table style="border-collapse: collapse;">
+              <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Owner:</td><td>${userName} (${userEmail})</td></tr>
+              <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Brand:</td><td>${escapeHtml(brand)}</td></tr>
+              <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Color:</td><td>${escapeHtml(color)}</td></tr>
+              <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Garage:</td><td>${isGarageParking ? 'Yes' : 'No'}</td></tr>
+            </table>
+            <p style="margin-top: 16px;">
+              <a href="${printUrl}"
+                 style="display: inline-block; padding: 12px 24px;
+                        background-color: #0d6efd; color: #ffffff;
+                        text-decoration: none; border-radius: 6px;
+                        font-size: 16px;">
+                Print QR Label
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              Click the button above to open the print page in the admin panel.
+            </p>
+            <hr>
+            <small>Quartier Bike ID — Community bicycle registration</small>
+          `
+        })
+      } catch (emailErr) {
+        console.error('Admin notification email failed:', emailErr.message)
       }
     }
 
