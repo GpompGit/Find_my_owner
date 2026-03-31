@@ -56,6 +56,11 @@ const app = express()
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
+// Trust the first proxy (Cloudflare Tunnel) so Express knows the request
+// arrived over HTTPS. Without this, secure cookies are never set because
+// Express sees the internal HTTP connection, not the public HTTPS one.
+app.set('trust proxy', 1)
+
 // ─── 6. Configure middleware (order matters!) ───────────────────────────────
 
 /**
