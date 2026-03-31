@@ -408,8 +408,8 @@ router.get('/users/:id', async (req, res) => {
 
     // Get their bikes
     const [bikes] = await db.query(
-      `SELECT id, tag_uid, brand, color, status, garage_parking,
-              payment_status, registered
+      `SELECT id, tag_uid, brand, color, description, photo_url, status,
+              garage_parking, payment_status, registered
        FROM bicycles WHERE owner_id = ?
        ORDER BY registered DESC`,
       [req.params.id]
