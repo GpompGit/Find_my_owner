@@ -272,9 +272,15 @@ app.use((req, res, next) => {
     const formToken = req.body && req.body._csrf
 
     if (!sessionToken || !formToken || sessionToken !== formToken) {
+      // Skip CSRF for multipart/form-data (file uploads) — multer hasn't parsed
+      // req.body yet at this point, so _csrf is unavailable. File upload routes
+      // are protected by requireAuth + requireOwner middleware instead.
+      const contentType = req.headers['content-type'] || ''
+      if (contentType.includes('multipart/form-data')) {
+        return next()
+      }
       req.flash('error', req.t ? req.t('errors.csrf_failed') : 'Invalid form submission. Please try again.')
-      // Redirect back to where they came from, or to home
-      return res.redirect('back')
+      return res.redirect(req.get('Referer') || '/')
     }
   }
 
