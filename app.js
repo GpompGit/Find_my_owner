@@ -78,11 +78,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://127.0.0.1:41951"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "https://127.0.0.1:41951"],
       // Prevent browser from upgrading HTTP requests to HTTPS on local network
       upgradeInsecureRequests: null
     }
